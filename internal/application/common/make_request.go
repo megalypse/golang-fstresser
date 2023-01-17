@@ -13,11 +13,11 @@ func MakeLightweightRequest[T entity.DataHolder](method string, req entity.Reque
 
 	httpRequest, _ := http.NewRequest(
 		method,
-		req.GetUrl(),
-		bytes.NewBuffer(req.ToBytesBody()),
+		req.Url,
+		bytes.NewBuffer(req.BytesBody),
 	)
 
-	for k, v := range req.GetHeaders() {
+	for k, v := range req.Headers {
 		httpRequest.Header.Add(k, v)
 	}
 

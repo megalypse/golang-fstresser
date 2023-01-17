@@ -11,7 +11,7 @@ import (
 type HttpPostform struct{}
 
 func (HttpPostform) PostForm(req entity.PostformRequest) (int, []byte) {
-	res, err := http.PostForm(req.GetUrl(), req.ToMapBody())
+	res, err := http.PostForm(req.Url, req.MapBody)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
