@@ -7,6 +7,6 @@ import (
 
 type HttpGet struct{}
 
-func (HttpGet) Get(req entity.Request) entity.Response[entity.Void] {
+func (HttpGet) Get(req entity.Request) entity.Response {
 	return common.MakeLightweightRequest[entity.Void]("GET", req)
 }

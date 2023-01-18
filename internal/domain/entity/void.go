@@ -2,4 +2,4 @@ package entity
 
 type Void struct{}
 
-func (Void) GetData([]byte)
+func (Void) GetData([]byte) {}

@@ -1,13 +1,14 @@
 package entity
 
-type Request interface {
-	GetUrl() string
-	ToBytesBody() []byte
-	GetHeaders() map[string]string
+type Request struct {
+	Method    string
+	Url       string
+	BytesBody []byte
+	Headers   map[string]string
 }
 
-type PostformRequest interface {
-	GetUrl() string
-	ToMapBody() map[string][]string
-	GetHeaders() map[string]string
+type PostformRequest struct {
+	Url     string
+	MapBody map[string][]string
+	Headers map[string]string
 }

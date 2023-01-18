@@ -7,6 +7,6 @@ import (
 
 type HttpPost struct{}
 
-func (HttpPost) Post(req entity.Request) entity.Response[entity.Void] {
+func (HttpPost) Post(req entity.Request) entity.Response {
 	return common.MakeLightweightRequest[entity.Void]("POST", req)
 }

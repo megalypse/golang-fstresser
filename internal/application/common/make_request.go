@@ -8,7 +8,7 @@ import (
 	"github.com/megalypse/golang-fstresser/internal/domain/entity"
 )
 
-func MakeLightweightRequest[T entity.DataHolder](method string, req entity.Request) entity.Response[T] {
+func MakeLightweightRequest[T entity.DataHolder](method string, req entity.Request) entity.Response {
 	client := http.Client{}
 
 	httpRequest, _ := http.NewRequest(
@@ -27,7 +27,7 @@ func MakeLightweightRequest[T entity.DataHolder](method string, req entity.Reque
 		log.Fatal(err.Error())
 	}
 
-	return entity.Response[T]{
+	return entity.Response{
 		StatusCode: res.StatusCode,
 	}
 }

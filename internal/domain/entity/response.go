@@ -1,6 +1,6 @@
 package entity
 
-type Response[T any] struct {
-	Body       T
+type Response struct {
+	Body       []byte
 	StatusCode int
 }
