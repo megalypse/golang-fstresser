@@ -8,7 +8,7 @@ import (
 	"github.com/megalypse/golang-fstresser/internal/domain/entity"
 )
 
-func MakeLightweightRequest[T entity.DataHolder](method string, req entity.Request) entity.Response {
+func MakeLightweightRequest[T entity.DataHolder](method string, req *entity.Request) entity.Response {
 	client := http.Client{}
 
 	httpRequest, _ := http.NewRequest(

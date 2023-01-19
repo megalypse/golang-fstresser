@@ -1,50 +1,37 @@
 package service
 
 import (
+	"io"
 	"log"
+	"net/http"
 
+	"github.com/megalypse/golang-fstresser/internal/application/common"
 	"github.com/megalypse/golang-fstresser/internal/domain/entity"
-	"github.com/megalypse/golang-fstresser/internal/domain/usecase"
 )
 
-type HttpService struct {
-	getUsecase      usecase.GetUsecase
-	postUsecase     usecase.PostUsecase
-	postformUsecase usecase.PostFormUsecase
+type HttpService struct{}
+
+func (HttpService) Get(req *entity.Request) entity.Response {
+	return common.MakeLightweightRequest[entity.Void]("GET", req)
 }
 
-func MakeRequest(req *entity.Request, httpService HttpService) *entity.Response {
-	switch req.Method {
-	case "GET":
-		return httpService.Get(req)
-	case "POST":
-		return httpService.Post(req)
-	default:
-		log.Fatalf("Http method not suported: %q", req.Method)
-		return &entity.Response{}
+func (HttpService) Post(req *entity.Request) entity.Response {
+	return common.MakeLightweightRequest[entity.Void]("POST", req)
+}
+
+func (HttpService) PostForm(req *entity.Request) entity.Response {
+	res, err := http.PostForm(req.Url, req.MapBody)
+	if err != nil {
+		log.Fatal(err.Error())
 	}
-}
 
-func (hs HttpService) Get(req *entity.Request) *entity.Response {
-	return hs.getUsecase.Get(req)
-}
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
-func (hs HttpService) Post(req *entity.Request) *entity.Response {
-	return hs.postUsecase.Post(req)
-}
-
-func (hs HttpService) Postform(req entity.PostformRequest) *entity.Response {
-	return hs.postformUsecase.PostForm(req)
-}
-
-func MakeHttpService(
-	getUsecase usecase.GetUsecase,
-	postUsecase usecase.PostUsecase,
-	postformUsecase usecase.PostFormUsecase,
-) HttpService {
-	return HttpService{
-		getUsecase:      getUsecase,
-		postUsecase:     postUsecase,
-		postformUsecase: postformUsecase,
+	return entity.Response{
+		StatusCode: res.StatusCode,
+		Body:       body,
 	}
 }
