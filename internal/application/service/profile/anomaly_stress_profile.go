@@ -18,7 +18,7 @@ var wg sync.WaitGroup
 var lgr logger.Logger
 
 func init() {
-	lgr = logger.Logger{}
+	lgr = logger.NewLogger()
 }
 
 type AnomalyStressProfile struct {
@@ -187,24 +187,25 @@ func deployDefaultFlux(ctx context.Context, asp *AnomalyStressProfile) {
 	wg.Add(1)
 
 	for {
+		mu.Lock()
+		isDefaultFluxActive := asp.State.IsDefaultFluxActive
+		mu.Unlock()
+
 		select {
 		case <-ctx.Done():
 			wg.Done()
 			return
 		default:
-			mu.Lock()
-			isDefaultFluxActive := asp.State.IsDefaultFluxActive
-			currentRps := asp.State.ComparableRps
-			mu.Unlock()
-
 			if isDefaultFluxActive {
+				mu.Lock()
+				currentRps := asp.State.ComparableRps
+				mu.Unlock()
 
 				for i := 0; i < currentRps; i++ {
 					go service.MakeRequest(&asp.Req, asp.RequestService)
 				}
-
-				time.Sleep(time.Second)
 			}
+			time.Sleep(time.Second)
 		}
 	}
 }
@@ -213,23 +214,25 @@ func deployAnomalyFlux(ctx context.Context, asp *AnomalyStressProfile) {
 	wg.Add(1)
 
 	for {
+		mu.Lock()
+		isAnomalyFluxActive := asp.State.IsAnomalyFluxActive
+		mu.Unlock()
+
 		select {
 		case <-ctx.Done():
 			wg.Done()
 			return
 		default:
-			mu.Lock()
-			isAnomalyFluxActive := asp.State.IsAnomalyFluxActive
-			anomalyRps := asp.Config.AnomalyRps
-			mu.Unlock()
-
 			if isAnomalyFluxActive {
+				mu.Lock()
+				anomalyRps := asp.Config.AnomalyRps
+				mu.Unlock()
+
 				for i := 0; i < anomalyRps; i++ {
 					go service.MakeRequest(&asp.Req, asp.RequestService)
 				}
-
-				time.Sleep(time.Second)
 			}
+			time.Sleep(time.Second)
 		}
 	}
 }

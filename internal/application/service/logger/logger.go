@@ -4,16 +4,34 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"time"
 )
 
+func NewLogger() Logger {
+	return Logger{
+		buffer: bytes.NewBuffer([]byte{}),
+	}
+}
+
 type Logger struct {
-	buffer bytes.Buffer
+	buffer *bytes.Buffer
 }
 
 func (l Logger) Log(message string) {
-	finalMessage := fmt.Sprintf("%s\n", message)
-	log.Println(finalMessage)
+	pst, err := time.LoadLocation("America/Los_Angeles")
 
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	finalMessage := fmt.Sprintf(
+		"\nBrazil: %s\nPST: %s%s",
+		time.Now().Format(time.RFC3339),
+		time.Now().In(pst).Format(time.RFC3339),
+		message,
+	)
+
+	log.Println(finalMessage)
 	l.buffer.Write([]byte(finalMessage))
 }
 

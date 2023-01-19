@@ -2,7 +2,6 @@ package common
 
 import (
 	"bytes"
-	"log"
 	"net/http"
 
 	"github.com/megalypse/golang-fstresser/internal/domain/entity"
@@ -21,13 +20,10 @@ func MakeLightweightRequest[T entity.DataHolder](method string, req *entity.Requ
 		httpRequest.Header.Add(k, v)
 	}
 
-	res, err := client.Do(httpRequest)
-
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	// TODO: handle error
+	client.Do(httpRequest)
 
 	return entity.Response{
-		StatusCode: res.StatusCode,
+		StatusCode: 0,
 	}
 }
