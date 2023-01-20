@@ -32,7 +32,6 @@ func (asp *AnomalyStressProfile) bootProfile() {
 	asp.Config.ExpectedExecutionTime = asp.Config.BeginAnomalyAfter + asp.Config.AnomalyDuration + asp.Config.HoldPeakAfterAnomalyFor
 	asp.Config.ExpectedAnomalyDeadline = asp.Config.BeginAnomalyAfter + asp.Config.AnomalyDuration
 	asp.Config.RampUpPace = float64(asp.Config.PeakRps) / asp.Config.RampUpTime.Seconds()
-	asp.Config.AnomalyRps = int(asp.Config.PeakRps * asp.Config.AnomalyMultiplier)
 
 	asp.State.CurrentRps = func() float64 {
 		if asp.Config.RampUpPace > 1 {
@@ -69,8 +68,8 @@ type Config struct {
 	// For how long the anomaly will be sustained
 	AnomalyDuration time.Duration
 
-	// The anomaly Rps will be calculated by (peakRps * AnomalyMultiplier)
-	AnomalyMultiplier int64
+	// The anomaly Rps will be calculated by (peakRps * AnomalyRps)
+	AnomalyRps int
 
 	// For how long the peak rps will be held after the anomaly ends
 	HoldPeakAfterAnomalyFor time.Duration
@@ -84,8 +83,6 @@ type Config struct {
 
 	// Computed value for how many Rps current pace will get an increase of per minute
 	RampUpPace float64
-
-	AnomalyRps int
 }
 
 type State struct {
@@ -149,18 +146,21 @@ func deployOrchestrator(
 			isLowerThanAnomalyInterval := currentRuntime <= asp.Config.ExpectedAnomalyDeadline
 			isAnomalyInterval := isGreaterThanAnomalyInterval && isLowerThanAnomalyInterval
 
+			prevEffectiveRps := asp.State.EffectiveRps
 			if !isAnomalyInterval && asp.State.EffectiveRps < asp.Config.PeakRps {
 				asp.State.CurrentRps = asp.State.CurrentRps + asp.Config.RampUpPace
 				asp.State.EffectiveRps = int64(asp.State.CurrentRps)
 				asp.State.ComparableRps = int(asp.State.EffectiveRps)
 			}
 
-			if isAnomalyInterval {
-				message := fmt.Sprintf("\nRuntime: %f\nRPS: %d (ANOMALY)\n", currentRuntime.Seconds(), asp.Config.PeakRps*asp.Config.AnomalyMultiplier)
-				lgr.Log(message)
-			} else {
-				message := fmt.Sprintf("\nRuntime: %f\nRPS: %d\n", currentRuntime.Seconds(), asp.State.EffectiveRps)
-				lgr.Log(message)
+			if prevEffectiveRps != asp.State.EffectiveRps {
+				if isAnomalyInterval {
+					message := fmt.Sprintf("\nRuntime: %f\nRPS: %d (ANOMALY)\n", currentRuntime.Seconds(), asp.Config.AnomalyRps)
+					lgr.Log(message)
+				} else {
+					message := fmt.Sprintf("\nRuntime: %f\nRPS: %d\n", currentRuntime.Seconds(), asp.State.EffectiveRps)
+					lgr.Log(message)
+				}
 			}
 
 			if asp.State.IsDefaultFluxActive == asp.State.IsAnomalyFluxActive {

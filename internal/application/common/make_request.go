@@ -20,10 +20,16 @@ func MakeLightweightRequest[T entity.DataHolder](method string, req *entity.Requ
 		httpRequest.Header.Add(k, v)
 	}
 
-	// TODO: handle error
-	client.Do(httpRequest)
+	res, err := client.Do(httpRequest)
+
+	if err != nil {
+		return entity.Response{
+			StatusCode: 500,
+			Mesaage:    err.Error(),
+		}
+	}
 
 	return entity.Response{
-		StatusCode: 0,
+		StatusCode: res.StatusCode,
 	}
 }

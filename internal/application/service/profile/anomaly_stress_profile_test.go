@@ -28,7 +28,7 @@ func init() {
 			RampUpTime:              time.Second * 5,
 			BeginAnomalyAfter:       time.Second * 6,
 			AnomalyDuration:         time.Second * 3,
-			AnomalyMultiplier:       2,
+			AnomalyRps:              2,
 			HoldPeakAfterAnomalyFor: time.Second,
 		},
 		State: State{
