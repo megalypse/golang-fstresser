@@ -1,16 +1,23 @@
-package logger
+package common
 
 import (
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"time"
 )
 
-func NewLogger() Logger {
-	return Logger{
-		buffer: bytes.NewBuffer([]byte{}),
+var lgr *Logger
+
+func GetLogger() *Logger {
+	if lgr == nil {
+		lgr = &Logger{
+			buffer: bytes.NewBuffer([]byte{}),
+		}
 	}
+
+	return lgr
 }
 
 type Logger struct {
@@ -33,6 +40,18 @@ func (l Logger) Log(message string) {
 
 	log.Println(finalMessage)
 	l.buffer.Write([]byte(finalMessage))
+}
+
+func (l Logger) RegisterLogs() {
+	logsDir := "../../../logs"
+	os.Mkdir(logsDir, 0777)
+
+	fileName := fmt.Sprintf(logsDir+"/%d.txt", time.Now().UnixMilli())
+	err := os.WriteFile(fileName, lgr.GetBuffer(), 0644)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (l Logger) GetBuffer() []byte {

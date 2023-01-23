@@ -1,8 +1,8 @@
 package service
 
 import (
+	"context"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/megalypse/golang-fstresser/internal/application/common"
@@ -11,26 +11,28 @@ import (
 
 type HttpService struct{}
 
-func (HttpService) Get(req *entity.Request) entity.Response {
-	return common.MakeLightweightRequest[entity.Void]("GET", req)
+func (HttpService) Get(closeCtx context.CancelFunc, req *entity.Request) *entity.Response {
+	return common.MakeLightweightRequest(closeCtx, req)
 }
 
-func (HttpService) Post(req *entity.Request) entity.Response {
-	return common.MakeLightweightRequest[entity.Void]("POST", req)
+func (HttpService) Post(closeCtx context.CancelFunc, req *entity.Request) *entity.Response {
+	return common.MakeLightweightRequest(closeCtx, req)
 }
 
-func (HttpService) PostForm(req *entity.Request) entity.Response {
+func (HttpService) PostForm(closeCtx context.CancelFunc, req *entity.Request) *entity.Response {
 	res, err := http.PostForm(req.Url, req.MapBody)
 	if err != nil {
-		log.Fatal(err.Error())
+		common.GetLogger().Log(err.Error())
+		closeCtx()
 	}
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err.Error())
+		common.GetLogger().Log(err.Error())
+		closeCtx()
 	}
 
-	return entity.Response{
+	return &entity.Response{
 		StatusCode: res.StatusCode,
 		Body:       body,
 	}

@@ -3,22 +3,18 @@ package profile
 import (
 	"context"
 	"fmt"
-	"log"
-	"os"
 	"sync"
 	"time"
 
-	"github.com/megalypse/golang-fstresser/internal/application/service"
-	"github.com/megalypse/golang-fstresser/internal/application/service/logger"
+	"github.com/megalypse/golang-fstresser/internal/application/common"
 	"github.com/megalypse/golang-fstresser/internal/domain/entity"
 )
 
-var mu sync.Mutex
 var wg sync.WaitGroup
-var lgr logger.Logger
+var lgr *common.Logger
 
 func init() {
-	lgr = logger.NewLogger()
+	lgr = common.GetLogger()
 }
 
 type AnomalyStressProfile struct {
@@ -42,8 +38,6 @@ func (asp *AnomalyStressProfile) bootProfile() {
 	}()
 
 	asp.State.EffectiveRps = int64(asp.State.CurrentRps)
-	asp.State.IsDefaultFluxActive = true
-	asp.State.IsAnomalyFluxActive = false
 
 	message := (fmt.Sprintf(
 		"\n==============================\nExpected execution time: %v\nExpected anomaly deadline: %v\nRampup pace: %f\nInitial Rps: %d\n==============================\n",
@@ -86,12 +80,10 @@ type Config struct {
 }
 
 type State struct {
-	CurrentRps          float64
-	EffectiveRps        int64
-	ComparableRps       int
-	Runtime             time.Duration
-	IsDefaultFluxActive bool
-	IsAnomalyFluxActive bool
+	CurrentRps    float64
+	EffectiveRps  int64
+	ComparableRps int
+	Runtime       time.Duration
 }
 
 func (asp *AnomalyStressProfile) StartLoad() {
@@ -101,138 +93,116 @@ func (asp *AnomalyStressProfile) StartLoad() {
 	ctx, cancelContext := context.WithCancel(ctx)
 	defer cancelContext()
 
-	wg.Add(1)
-	go deployOrchestrator(ctx, cancelContext, time.Second, asp)
-	go deployDefaultFlux(ctx, asp)
-	go deployAnomalyFlux(ctx, asp)
-
-	wg.Wait()
+	deployOrchestrator(ctx, cancelContext, asp)
 }
 
 func deployOrchestrator(
 	ctx context.Context,
 	cancelCtx context.CancelFunc,
-	durationMetric time.Duration,
 	asp *AnomalyStressProfile,
 ) {
+	startPoint := time.Now()
+	anomalyStartsAt := startPoint.Add(asp.Config.BeginAnomalyAfter)
+	anomalyEndsAt := anomalyStartsAt.Add(asp.Config.AnomalyDuration)
+	expectedDeadline := anomalyEndsAt.Add(asp.Config.HoldPeakAfterAnomalyFor)
+
+	defaultFluxChan := make(chan int)
+	anomalyFluxChan := make(chan int)
+	defer close(defaultFluxChan)
+	defer close(anomalyFluxChan)
+
+	currentRps := 0.0
+	effectiveRps := 1
+	previousEffectiveRps := 1
+
+	go deployDefaultFlux(ctx, cancelCtx, &asp.Req, defaultFluxChan)
+	go deployAnomalyFlux(ctx, cancelCtx, &asp.Req, anomalyFluxChan)
+
+l1:
 	for {
+
 		select {
 		case <-ctx.Done():
 			wg.Done()
 
-			logsDir := "../../../logs"
-			os.Mkdir(logsDir, 0777)
+			lgr.RegisterLogs()
 
-			fileName := fmt.Sprintf(logsDir+"/%d.txt", time.Now().UnixMilli())
-			err := os.WriteFile(fileName, lgr.GetBuffer(), 0644)
-
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			return
+			break l1
 		default:
-			time.Sleep(durationMetric)
-			mu.Lock()
+			currentRps += asp.Config.RampUpPace
+			previousEffectiveRps = effectiveRps
+			effectiveRps = int(currentRps)
 
-			asp.State.Runtime += durationMetric
-			currentRuntime := asp.State.Runtime
+			now := time.Now()
+			runtime := now.Unix() - startPoint.Unix()
 
-			if currentRuntime == asp.Config.ExpectedExecutionTime {
+			if now.Unix() > expectedDeadline.Unix() {
 				cancelCtx()
+				continue
 			}
 
-			isGreaterThanAnomalyInterval := currentRuntime >= asp.Config.BeginAnomalyAfter
-			isLowerThanAnomalyInterval := currentRuntime <= asp.Config.ExpectedAnomalyDeadline
-			isAnomalyInterval := isGreaterThanAnomalyInterval && isLowerThanAnomalyInterval
-
-			prevEffectiveRps := asp.State.EffectiveRps
-			if !isAnomalyInterval && asp.State.EffectiveRps < asp.Config.PeakRps {
-				asp.State.CurrentRps = asp.State.CurrentRps + asp.Config.RampUpPace
-				asp.State.EffectiveRps = int64(asp.State.CurrentRps)
-				asp.State.ComparableRps = int(asp.State.EffectiveRps)
-			}
-
-			if prevEffectiveRps != asp.State.EffectiveRps {
-				if isAnomalyInterval {
-					message := fmt.Sprintf("\nRuntime: %f\nRPS: %d (ANOMALY)\n", currentRuntime.Seconds(), asp.Config.AnomalyRps)
-					lgr.Log(message)
-				} else {
-					message := fmt.Sprintf("\nRuntime: %f\nRPS: %d\n", currentRuntime.Seconds(), asp.State.EffectiveRps)
-					lgr.Log(message)
+			if now.Unix() < anomalyStartsAt.Unix() || now.Unix() > anomalyEndsAt.Unix() {
+				if effectiveRps != previousEffectiveRps {
+					lgr.Log(fmt.Sprintf("\nRuntime: %ds\nRPS: %d\n", runtime, effectiveRps))
 				}
+
+				defaultFluxChan <- effectiveRps
+			} else {
+				lgr.Log(fmt.Sprintf("\nRuntime: %ds\nRPS: %d (ANOMALY)\n", runtime, effectiveRps))
+				anomalyFluxChan <- asp.Config.AnomalyRps
 			}
 
-			if asp.State.IsDefaultFluxActive == asp.State.IsAnomalyFluxActive {
-				asp.State.IsDefaultFluxActive = true
-				asp.State.IsAnomalyFluxActive = false
-			}
+			time.Sleep(time.Second)
+		}
+	}
 
-			if asp.State.IsDefaultFluxActive && !asp.State.IsAnomalyFluxActive && isAnomalyInterval {
-				asp.State.IsDefaultFluxActive = false
-				asp.State.IsAnomalyFluxActive = true
-			}
+	wg.Wait()
+}
 
-			if !asp.State.IsDefaultFluxActive && asp.State.IsAnomalyFluxActive && !isAnomalyInterval {
-				asp.State.IsDefaultFluxActive = true
-				asp.State.IsAnomalyFluxActive = false
-			}
+func deployDefaultFlux(
+	ctx context.Context,
+	cancelCtx context.CancelFunc,
+	req *entity.Request,
+	fluxChan <-chan int,
+) {
+	wg.Add(1)
+	defer wg.Done()
 
-			mu.Unlock()
+l1:
+	for {
+		select {
+		case <-ctx.Done():
+			break l1
+		case rps := <-fluxChan:
+			go func() {
+				for i := 0; i < rps; i++ {
+					go common.MakeLightweightRequest(cancelCtx, req)
+				}
+			}()
 		}
 	}
 }
 
-func deployDefaultFlux(ctx context.Context, asp *AnomalyStressProfile) {
+func deployAnomalyFlux(
+	ctx context.Context,
+	cancelCtx context.CancelFunc,
+	req *entity.Request,
+	fluxChan <-chan int,
+) {
 	wg.Add(1)
+	defer wg.Done()
 
+l1:
 	for {
-		mu.Lock()
-		isDefaultFluxActive := asp.State.IsDefaultFluxActive
-		mu.Unlock()
-
 		select {
 		case <-ctx.Done():
-			wg.Done()
-			return
-		default:
-			if isDefaultFluxActive {
-				mu.Lock()
-				currentRps := asp.State.ComparableRps
-				mu.Unlock()
-
-				for i := 0; i < currentRps; i++ {
-					go service.MakeRequest(&asp.Req, asp.RequestService)
+			break l1
+		case rps := <-fluxChan:
+			go func() {
+				for i := 0; i < rps; i++ {
+					go common.MakeLightweightRequest(cancelCtx, req)
 				}
-			}
-			time.Sleep(time.Second)
-		}
-	}
-}
-
-func deployAnomalyFlux(ctx context.Context, asp *AnomalyStressProfile) {
-	wg.Add(1)
-
-	for {
-		mu.Lock()
-		isAnomalyFluxActive := asp.State.IsAnomalyFluxActive
-		mu.Unlock()
-
-		select {
-		case <-ctx.Done():
-			wg.Done()
-			return
-		default:
-			if isAnomalyFluxActive {
-				mu.Lock()
-				anomalyRps := asp.Config.AnomalyRps
-				mu.Unlock()
-
-				for i := 0; i < anomalyRps; i++ {
-					go service.MakeRequest(&asp.Req, asp.RequestService)
-				}
-			}
-			time.Sleep(time.Second)
+			}()
 		}
 	}
 }

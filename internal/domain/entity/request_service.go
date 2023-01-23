@@ -1,7 +1,9 @@
 package entity
 
+import "context"
+
 type RequestService interface {
-	Get(req *Request) Response
-	Post(req *Request) Response
-	PostForm(req *Request) Response
+	Get(context.CancelFunc, *Request) *Response
+	Post(context.CancelFunc, *Request) *Response
+	PostForm(context.CancelFunc, *Request) *Response
 }
