@@ -1,0 +1,20 @@
+{
+  "Profiles": [
+    {
+      "Request": {
+        "Method": "POST",
+        "Url": "https://mock-url.com",
+        "BodyType": "JSON",
+        "Body": {},
+        "Headers": {}
+      },
+      "Config": {
+        "PeakRps": 200,
+        "RampUpTime": "20|min",
+        "AnomalyTimeStamps": ["20,3"],
+        "AnomaliesRps": [300],
+        "EndLoadAt": "1|hour"
+      }
+    }
+  ]
+}

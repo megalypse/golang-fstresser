@@ -10,12 +10,12 @@ import (
 )
 
 type ProfilesWrapper struct {
-	Profiles []contracts.StressProfile
+	Profiles []contracts.AnomalyStressProfile
 }
 
 type LocalProfileLoader struct{}
 
-func (LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc) []contracts.StressProfile {
+func (LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc) []contracts.AnomalyStressProfile {
 	profilesPath := os.Getenv("FSTRESSER_PROFILES_PATH")
 
 	if profilesPath == "" {
@@ -30,7 +30,7 @@ func (LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc) []contracts.
 	return parseJsonProfile(result)
 }
 
-func parseJsonProfile(bytes []byte) []contracts.StressProfile {
+func parseJsonProfile(bytes []byte) []contracts.AnomalyStressProfile {
 	holder := new(ProfilesWrapper)
 
 	json.Unmarshal(bytes, holder)

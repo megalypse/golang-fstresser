@@ -1,5 +1,5 @@
 package contracts
 
-type StressProfile interface {
+type AnomalyStressProfile interface {
 	StartLoad()
 }

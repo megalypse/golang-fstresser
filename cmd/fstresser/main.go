@@ -10,7 +10,7 @@ import (
 
 func main() {
 	asp := profile.AnomalyStressProfile{
-		Req: entity.Request{
+		Request: entity.Request{
 			Method:    "POST",
 			Url:       "https://service.ci.aucn.io/resi/listing/v1/listings/minimal",
 			BytesBody: []byte(`[1]`),

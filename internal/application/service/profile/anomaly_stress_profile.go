@@ -18,8 +18,8 @@ func init() {
 }
 
 type AnomalyStressProfile struct {
-	Req    entity.Request
-	Config Config
+	Request entity.Request
+	Config  Config
 }
 
 func (asp *AnomalyStressProfile) bootProfile() {
@@ -72,7 +72,7 @@ func (asp *AnomalyStressProfile) StartLoad() {
 	defer cancelContext()
 
 	asp.bootProfile()
-	common.BootRequest(cancelContext, &asp.Req)
+	common.BootRequest(cancelContext, &asp.Request)
 
 	deployOrchestrator(ctx, cancelContext, asp)
 }
@@ -97,8 +97,8 @@ func deployOrchestrator(
 	effectiveRps := 1
 	previousEffectiveRps := 1
 
-	go deployDefaultFlux(ctx, cancelCtx, &asp.Req, defaultFluxChan)
-	go deployAnomalyFlux(ctx, cancelCtx, &asp.Req, anomalyFluxChan)
+	go deployDefaultFlux(ctx, cancelCtx, &asp.Request, defaultFluxChan)
+	go deployAnomalyFlux(ctx, cancelCtx, &asp.Request, anomalyFluxChan)
 
 l1:
 	for {
