@@ -1,4 +1,4 @@
-package entity
+package contracts
 
 type StressProfile interface {
 	StartLoad()

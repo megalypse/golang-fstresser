@@ -18,10 +18,8 @@ func init() {
 }
 
 type AnomalyStressProfile struct {
-	RequestService entity.RequestService
-	Req            entity.Request
-	Config         Config
-	State          State
+	Req    entity.Request
+	Config Config
 }
 
 func (asp *AnomalyStressProfile) bootProfile() {
@@ -29,22 +27,11 @@ func (asp *AnomalyStressProfile) bootProfile() {
 	asp.Config.ExpectedAnomalyDeadline = asp.Config.BeginAnomalyAfter + asp.Config.AnomalyDuration
 	asp.Config.RampUpPace = float64(asp.Config.PeakRps) / asp.Config.RampUpTime.Seconds()
 
-	asp.State.CurrentRps = func() float64 {
-		if asp.Config.RampUpPace > 1 {
-			return asp.Config.RampUpPace
-		}
-
-		return 1
-	}()
-
-	asp.State.EffectiveRps = int64(asp.State.CurrentRps)
-
 	message := (fmt.Sprintf(
-		"\n==============================\nExpected execution time: %v\nExpected anomaly deadline: %v\nRampup pace: %f\nInitial Rps: %d\n==============================\n",
+		"\n==============================\nExpected execution time: %v\nExpected anomaly deadline: %v\nRampup pace: %f\n==============================\n",
 		asp.Config.ExpectedExecutionTime,
 		asp.Config.ExpectedAnomalyDeadline,
 		asp.Config.RampUpPace,
-		asp.State.EffectiveRps,
 	))
 
 	lgr.Log(message)
@@ -79,19 +66,13 @@ type Config struct {
 	RampUpPace float64
 }
 
-type State struct {
-	CurrentRps    float64
-	EffectiveRps  int64
-	ComparableRps int
-	Runtime       time.Duration
-}
-
 func (asp *AnomalyStressProfile) StartLoad() {
-	asp.bootProfile()
-
 	ctx := context.Background()
 	ctx, cancelContext := context.WithCancel(ctx)
 	defer cancelContext()
+
+	asp.bootProfile()
+	common.BootRequest(cancelContext, &asp.Req)
 
 	deployOrchestrator(ctx, cancelContext, asp)
 }
@@ -107,8 +88,9 @@ func deployOrchestrator(
 	expectedDeadline := anomalyEndsAt.Add(asp.Config.HoldPeakAfterAnomalyFor)
 
 	defaultFluxChan := make(chan int)
-	anomalyFluxChan := make(chan int)
 	defer close(defaultFluxChan)
+
+	anomalyFluxChan := make(chan int)
 	defer close(anomalyFluxChan)
 
 	currentRps := 0.0
@@ -120,11 +102,9 @@ func deployOrchestrator(
 
 l1:
 	for {
-
 		select {
 		case <-ctx.Done():
-			wg.Done()
-
+			common.GetLogger().Log("Execution finished.")
 			lgr.RegisterLogs()
 
 			break l1
@@ -136,7 +116,7 @@ l1:
 			now := time.Now()
 			runtime := now.Unix() - startPoint.Unix()
 
-			if now.Unix() > expectedDeadline.Unix() {
+			if now.Unix() >= expectedDeadline.Unix() {
 				cancelCtx()
 				continue
 			}

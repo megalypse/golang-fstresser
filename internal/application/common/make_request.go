@@ -29,7 +29,24 @@ func init() {
 	}
 }
 
-func MakeLightweightRequest(closeCtx context.CancelFunc, req *entity.Request) *entity.Response {
+func BootRequest(cancelCtx context.CancelFunc, req *entity.Request) {
+	httpRequest, err := http.NewRequest(
+		req.Method,
+		req.Url,
+		nil,
+	)
+
+	if err != nil {
+		GetLogger().Log(err.Error())
+		cancelCtx()
+	}
+
+	for k, v := range req.Headers {
+		httpRequest.Header.Add(k, v)
+	}
+}
+
+func MakeLightweightRequest(cancelCtx context.CancelFunc, req *entity.Request) *entity.Response {
 	client := clientPool.Get().(*http.Client)
 	defer clientPool.Put(client)
 
@@ -41,7 +58,7 @@ func MakeLightweightRequest(closeCtx context.CancelFunc, req *entity.Request) *e
 
 	if err != nil {
 		GetLogger().Log(err.Error())
-		closeCtx()
+		cancelCtx()
 	}
 
 	for k, v := range req.Headers {
@@ -49,22 +66,21 @@ func MakeLightweightRequest(closeCtx context.CancelFunc, req *entity.Request) *e
 	}
 
 	res, err := client.Do(httpRequest)
-
 	if err != nil {
 		GetLogger().Log(err.Error())
-		closeCtx()
-
+		cancelCtx()
 	}
 
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		bytes, err := io.ReadAll(res.Body)
 		if err != nil {
 			GetLogger().Log(err.Error())
-			closeCtx()
+			cancelCtx()
+			return &badResponse
 		}
 
 		GetLogger().Log((fmt.Sprintf("Request failed with status code %d. Body: %q", res.StatusCode, string(bytes))))
-		closeCtx()
+		cancelCtx()
 	}
 
 	return &successResponse

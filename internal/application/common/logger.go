@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"runtime"
 	"time"
 )
 
@@ -32,7 +34,7 @@ func (l Logger) Log(message string) {
 	}
 
 	finalMessage := fmt.Sprintf(
-		"\nBrazil: %s\nPST: %s%s",
+		"\nBrazil: %s\nPST: %s\n%s",
 		time.Now().Format(time.RFC3339),
 		time.Now().In(pst).Format(time.RFC3339),
 		message,
@@ -43,15 +45,18 @@ func (l Logger) Log(message string) {
 }
 
 func (l Logger) RegisterLogs() {
-	logsDir := "../../../logs"
-	os.Mkdir(logsDir, 0777)
-
+	_, b, _, _ := runtime.Caller(0)
+	basepath := filepath.Dir(b)
+	logsDir := basepath + "/../../../logs"
 	fileName := fmt.Sprintf(logsDir+"/%d.txt", time.Now().UnixMilli())
-	err := os.WriteFile(fileName, lgr.GetBuffer(), 0644)
 
+	os.Mkdir(logsDir, 0777)
+	err := os.WriteFile(fileName, lgr.GetBuffer(), 0644)
 	if err != nil {
-		log.Fatal(err)
+		GetLogger().Log(err.Error())
 	}
+
+	log.Println("Logs saved successfully.")
 }
 
 func (l Logger) GetBuffer() []byte {
