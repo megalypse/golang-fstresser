@@ -7,9 +7,3 @@ type Request struct {
 	MapBody   map[string][]string
 	Headers   map[string]string
 }
-
-type PostformRequest struct {
-	Url     string
-	MapBody map[string][]string
-	Headers map[string]string
-}
