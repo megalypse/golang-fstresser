@@ -6,20 +6,18 @@ import (
 	"os"
 
 	"github.com/megalypse/golang-fstresser/internal/application/common"
-	"github.com/megalypse/golang-fstresser/internal/domain/contracts"
+	"github.com/megalypse/golang-fstresser/internal/application/service/profile/customprofile"
 )
 
-type ProfilesWrapper struct {
-	Profiles []contracts.AnomalyStressProfile
+type profilesWrapper struct {
+	Profiles []customprofile.CustomStressProfile
 }
 
 type LocalProfileLoader struct{}
 
-func (LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc) []contracts.AnomalyStressProfile {
-	profilesPath := os.Getenv("FSTRESSER_PROFILES_PATH")
-
+func (LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc, profilesPath string) []customprofile.CustomStressProfile {
 	if profilesPath == "" {
-		common.GracefulVarnish(cancelCtx, "Profiles path not provided. Finishing execution...")
+		common.GracefulVarnish(cancelCtx, "Profiles path not provided. Ending execution...")
 	}
 
 	result, err := os.ReadFile(profilesPath)
@@ -27,11 +25,11 @@ func (LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc) []contracts.
 		common.GracefulVarnish(cancelCtx, err.Error())
 	}
 
-	return parseJsonProfile(result)
+	return ObjectifyProfiles(result)
 }
 
-func parseJsonProfile(bytes []byte) []contracts.AnomalyStressProfile {
-	holder := new(ProfilesWrapper)
+func ObjectifyProfiles(bytes []byte) []customprofile.CustomStressProfile {
+	holder := new(profilesWrapper)
 
 	json.Unmarshal(bytes, holder)
 

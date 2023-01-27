@@ -29,23 +29,6 @@ func init() {
 	}
 }
 
-func BootRequest(cancelCtx context.CancelFunc, req *entity.Request) {
-	httpRequest, err := http.NewRequest(
-		req.Method,
-		req.Url,
-		nil,
-	)
-
-	if err != nil {
-		GetLogger().Log(err.Error())
-		cancelCtx()
-	}
-
-	for k, v := range req.Headers {
-		httpRequest.Header.Add(k, v)
-	}
-}
-
 func MakeLightweightRequest(cancelCtx context.CancelFunc, req *entity.Request) *entity.Response {
 	client := clientPool.Get().(*http.Client)
 	defer clientPool.Put(client)

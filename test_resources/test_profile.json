@@ -1,19 +1,31 @@
 {
   "Profiles": [
     {
-      "Request": {
-        "Method": "POST",
-        "Url": "https://mock-url.com",
-        "BodyType": "JSON",
-        "Body": {},
-        "Headers": {}
-      },
+      "Requests": [
+        {
+          "Rate": 1,
+          "Method": "POST",
+          "Url": "https://mock-url.com",
+          "Body": {
+            "BodyType": "JSON",
+            "Body": [1]
+          },
+          "Headers": {
+            "Content-Type": "application/json"
+          }
+        }
+      ],
       "Config": {
         "PeakRps": 200,
-        "RampUpTime": "20|min",
-        "AnomalyTimeStamps": ["20,3"],
-        "AnomaliesRps": [300],
-        "EndLoadAt": "1|hour"
+        "RampUpTime": "20:sec",
+        "CustomLoads": [
+          {
+            "StartsAt": "20:min",
+            "EndsAt": "23:min",
+            "Rps": 300
+          }
+        ],
+        "EndLoadAt": "1:hour"
       }
     }
   ]
