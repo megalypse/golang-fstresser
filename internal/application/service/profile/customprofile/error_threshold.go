@@ -2,6 +2,7 @@ package customprofile
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -31,6 +32,8 @@ func deployErrorThresholdAnalyzer(
 	for {
 		select {
 		case <-ctx.Done():
+			message := fmt.Sprintf("Requests done: %d\nSuccess: %d\nFailed: %d", totalRequests, successfullRequests, failedRequests)
+			common.GetLogger().Log(message)
 			return
 		case httpStatus := <-reqCountConsumer:
 			if httpStatus >= 200 && httpStatus < 300 {
