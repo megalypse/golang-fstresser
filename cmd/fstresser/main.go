@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"log"
+	"os"
 	"runtime"
 
 	"github.com/megalypse/golang-fstresser/internal/application/service"
@@ -14,7 +16,12 @@ func main() {
 
 	loader := service.LocalProfileLoader{}
 
-	profiles := loader.LoadProfile(cancelCtx, "/Users/megalypse/Documents/Projects/go/fstresser/resources/first_profile.json")
+	path := os.Getenv("FSTRESSER_PROFILES_PATH")
+	if path == "" {
+		log.Fatal("Profiles path not defined")
+	}
+
+	profiles := loader.LoadProfile(cancelCtx, path)
 
 	for _, profile := range profiles {
 		if profile.IsActive {
