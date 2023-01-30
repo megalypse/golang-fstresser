@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"os"
 
 	"github.com/megalypse/golang-fstresser/internal/application/common"
@@ -21,6 +22,7 @@ func (LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc, profilesPath
 	}
 
 	result, err := os.ReadFile(profilesPath)
+
 	if err != nil {
 		common.GracefulVarnish(cancelCtx, err.Error())
 	}
@@ -31,7 +33,10 @@ func (LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc, profilesPath
 func ObjectifyProfiles(bytes []byte) []customprofile.CustomStressProfile {
 	holder := new(profilesWrapper)
 
-	json.Unmarshal(bytes, holder)
+	err := json.Unmarshal(bytes, holder)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
 	return holder.Profiles
 }

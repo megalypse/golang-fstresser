@@ -5,21 +5,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/megalypse/golang-fstresser/internal/application/common"
 	"github.com/megalypse/golang-fstresser/internal/domain/entity"
 )
 
 type CustomStressProfile struct {
+	IsActive bool
 	Requests []CustomProfileRequest
 	Config   CustomProfileConfig
 }
 
 func (csp *CustomStressProfile) StartLoad(ctx context.Context, cancelCtx context.CancelFunc) {
-
 	deployCustomProfileOrchestrator(ctx, cancelCtx, csp)
 }
 
@@ -32,7 +32,11 @@ type CustomProfileRequest struct {
 }
 
 func (cpr CustomProfileRequest) ToEntity() entity.Request {
-	res, _ := json.Marshal(cpr.Body.JsonBody)
+	res, err := json.Marshal(cpr.Body.JsonBody)
+
+	if err != nil {
+		common.GetLogger().Log(err.Error())
+	}
 
 	return entity.Request{
 		Method:    cpr.Method,
@@ -52,7 +56,7 @@ type CustomBody struct {
 func (cb *CustomBody) UnmarshalJSON(rawJson []byte) error {
 	holder := new(struct {
 		BodyType string
-		Body     []byte
+		Body     any
 	})
 
 	json.Unmarshal(rawJson, &holder)
@@ -62,7 +66,7 @@ func (cb *CustomBody) UnmarshalJSON(rawJson []byte) error {
 		cb.JsonBody = holder.Body
 	case "POSTFORM":
 		finalHolder := make(map[string][]string)
-		json.Unmarshal(holder.Body, &finalHolder)
+		json.Unmarshal(holder.Body.([]byte), &finalHolder)
 		cb.FormBody = finalHolder
 	default:
 		return fmt.Errorf("body type not supported: %q", holder.BodyType)
@@ -91,6 +95,7 @@ type CustomLoad struct {
 	StartsAt DurationInput
 	EndsAt   DurationInput
 	Rps      int
+	IsLogged bool
 
 	unixStartsAt int64
 	unixEndsAt   int64
@@ -117,7 +122,6 @@ func (di *DurationInput) UnmarshalJSON(rawJson []byte) error {
 	parseErr := errors.New("duration input must be on {int}:{sec|min|hour} format")
 	rawDuration := string(rawJson)
 	result, _ := strconv.Unquote(rawDuration)
-	log.Println(result)
 
 	raw := strings.Split(result, ":")
 

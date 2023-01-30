@@ -40,7 +40,24 @@ func (l Logger) Log(message string) {
 		message,
 	)
 
-	log.Println(finalMessage)
+	log.Println(finalMessage + "\n")
+	l.buffer.Write([]byte(finalMessage))
+}
+
+func (l Logger) SilentLog(message string) {
+	pst, err := time.LoadLocation("America/Los_Angeles")
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	finalMessage := fmt.Sprintf(
+		"\nBrazil: %s\nPST: %s\n%s",
+		time.Now().Format(time.RFC3339),
+		time.Now().In(pst).Format(time.RFC3339),
+		message,
+	)
+
 	l.buffer.Write([]byte(finalMessage))
 }
 

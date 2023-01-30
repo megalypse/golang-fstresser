@@ -29,21 +29,23 @@ func deployCustomProfileOrchestrator(
 	csp.Config.bootstrap()
 	calculateCustomLoadsWindows(startTime, csp)
 	prepareRequests(csp)
+
 	requestQueueIter := generateRequestQueue(len(requestQueue) - 1)
 
 	defaultRequesterChan := make(chan DefaultRequesterPayload)
 	customRequesterChan := make(chan CustomRequesterPayload)
-	rpsChan, _ := deployRpsComposer(ctx, startTime, &csp.Config)
+	rpsChan := deployRpsComposer(ctx, startTime, &csp.Config)
 
 	go deployDefaultLoadsRequester(ctx, cancelCtx, defaultRequesterChan)
 	go deployCustomLoadsRequester(ctx, cancelCtx, customRequesterChan)
 
 	currentRps := int(getInitialRps(&csp.Config))
 	previousRps := currentRps
+	defaultRequesterRps := currentRps
 l1:
 	for {
 		now := time.Now()
-		customLoad := isCustomLoadWindow(&csp.Config, now.Unix())
+		runtime := time.Now().Unix() - startTime.Unix()
 
 		select {
 		case <-ctx.Done():
@@ -51,30 +53,42 @@ l1:
 			common.GetLogger().RegisterLogs()
 			break l1
 		case newRps := <-rpsChan:
-			previousRps = currentRps
-			currentRps = newRps
+			customLoad := isCustomLoadWindow(&csp.Config, now.Unix())
+			if newRps != 0 {
+				previousRps = currentRps
+				currentRps = newRps
+				defaultRequesterRps = currentRps
 
-			if customLoad == nil {
-				logRps(previousRps, currentRps, fmt.Sprintf("Rps: %d", currentRps))
+				if customLoad == nil {
+					logRps(previousRps, currentRps, runtime)
 
-				defaultRequesterChan <- DefaultRequesterPayload{
-					Request: requestQueue[requestQueueIter.Next()],
-					Rps:     currentRps,
+					defaultRequesterChan <- DefaultRequesterPayload{
+						Request: requestQueue[requestQueueIter.Next()],
+						Rps:     currentRps,
+					}
 				}
 			}
 		default:
+			customLoad := isCustomLoadWindow(&csp.Config, now.Unix())
 			request := requestQueue[requestQueueIter.Next()]
 
 			if customLoad != nil {
-				common.GetLogger().Log(fmt.Sprintf("Rps: %d (CUSTOM)", customLoad.Rps))
+				previousRps = currentRps
+				currentRps = customLoad.Rps
+
+				if previousRps != currentRps {
+					common.GetLogger().Log(fmt.Sprintf("Runtime: %ds, Rps: %d (CUSTOM)", runtime, customLoad.Rps))
+				}
 
 				customRequesterChan <- CustomRequesterPayload{
 					Request:          request,
 					CustomLoadConfig: customLoad,
 				}
 			} else {
-				logRps(previousRps, currentRps, fmt.Sprintf("Rps: %d", currentRps))
+				previousRps = currentRps
+				currentRps = defaultRequesterRps
 
+				logRps(previousRps, currentRps, runtime)
 				defaultRequesterChan <- DefaultRequesterPayload{
 					Request: request,
 					Rps:     currentRps,
@@ -91,17 +105,16 @@ l1:
 	close(customRequesterChan)
 }
 
-func logRps(prevRps, currentRps int, message string) {
+func logRps(prevRps, currentRps int, runtime int64) {
 	if prevRps != currentRps {
-		common.GetLogger().Log(message)
+		common.GetLogger().Log(fmt.Sprintf("Runtime: %ds, Rps: %d", runtime, currentRps))
 	}
 }
 
 // This one purpose is to keep track of whenever a rampup should be made
-func deployRpsComposer(ctx context.Context, startTime time.Time, cpc *CustomProfileConfig) (<-chan int, context.Context) {
+func deployRpsComposer(ctx context.Context, startTime time.Time, cpc *CustomProfileConfig) <-chan int {
 	rpsChan := make(chan int)
 	ticker := time.NewTicker(cpc.RpsIncreaseInterval.Duration)
-	tickerCtx, cancelTickerCtx := context.WithCancel(ctx)
 
 	wg.Add(1)
 	go func() {
@@ -124,22 +137,23 @@ func deployRpsComposer(ctx context.Context, startTime time.Time, cpc *CustomProf
 						rpsChan <- cpc.PeakRps
 					}
 
-					close(rpsChan)
-					cancelTickerCtx()
+					common.GetLogger().Log("Rampup finished")
 					wg.Done()
 					break l1
 				} else {
 					rawRps += cpc.RpsRampupPace
 					effectiveRps = int(rawRps)
 
-					rpsChan <- effectiveRps
+					if effectiveRps != 0 {
+						rpsChan <- effectiveRps
+					}
 				}
 			}
 
 		}
 	}()
 
-	return rpsChan, tickerCtx
+	return rpsChan
 }
 
 func deployDefaultLoadsRequester(ctx context.Context, cancelCtx context.CancelFunc, loadsConsumer <-chan DefaultRequesterPayload) {
@@ -206,8 +220,10 @@ func prepareRequests(csp *CustomStressProfile) {
 }
 
 func calculateCustomLoadsWindows(startTime time.Time, csp *CustomStressProfile) {
-	for _, v := range csp.Config.CustomLoads {
+	for i, v := range csp.Config.CustomLoads {
 		v.calculateWindow(startTime)
+
+		csp.Config.CustomLoads[i] = v
 	}
 }
 
