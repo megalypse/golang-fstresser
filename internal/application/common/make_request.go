@@ -84,8 +84,8 @@ func MakeLightweightRequest(cancelCtx context.CancelFunc, req *entity.Request) *
 			return &badResponse
 		}
 
-		GetLogger().Log((fmt.Sprintf("Request failed with status code %d. Body: %q", res.StatusCode, string(bytes))))
-		cancelCtx()
+		GetLogger().SilentLog((fmt.Sprintf("Request failed with status code %d. Body: %q", res.StatusCode, string(bytes))))
+		// cancelCtx()
 		return &badResponse
 	}
 
