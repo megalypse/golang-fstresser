@@ -81,6 +81,7 @@ type CustomProfileConfig struct {
 	CustomLoads         []CustomLoad
 	EndLoadAt           DurationInput
 	RpsIncreaseInterval DurationInput
+	ErrorTreshold       string
 
 	// This was created as a computed value to increase load tests flexibility
 	RpsRampupPace float64
