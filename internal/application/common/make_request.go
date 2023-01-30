@@ -70,8 +70,7 @@ func MakeLightweightRequest(cancelCtx context.CancelFunc, req *entity.Request) *
 
 	res, err := client.Do(httpRequest)
 	if err != nil {
-		GetLogger().Log(err.Error())
-		cancelCtx()
+		GetLogger().SilentLog(err.Error())
 		return &badResponse
 	}
 	defer res.Body.Close()
