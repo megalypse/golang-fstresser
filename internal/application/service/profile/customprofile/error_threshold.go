@@ -22,7 +22,7 @@ func deployErrorThresholdAnalyzer(
 	var totalRequests int
 
 	separated := strings.Split(cpc.ErrorThreshold, ":")
-	treshold, err := strconv.Atoi(separated[0])
+	threshold, err := strconv.Atoi(separated[0])
 	if err != nil {
 		common.GetLogger().Log(err.Error())
 		cancelCtx()
@@ -46,14 +46,14 @@ func deployErrorThresholdAnalyzer(
 
 			switch separated[1] {
 			case "raw":
-				if failedRequests > treshold {
+				if failedRequests > threshold {
 					common.GetLogger().Log("Error threshold met.")
 					cancelCtx()
 				}
 			default:
 				errPercent := failedRequests * 100 / totalRequests
 
-				if errPercent > treshold {
+				if errPercent > threshold {
 					common.GetLogger().Log("Error threshold met.")
 					cancelCtx()
 				}
