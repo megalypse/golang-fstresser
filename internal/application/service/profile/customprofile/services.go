@@ -49,7 +49,7 @@ l1:
 
 		select {
 		case <-ctx.Done():
-			common.GetLogger().Log("Execution finished")
+			common.GetLogger().Log(fmt.Sprintf("Execution finished. Took %ds", runtime))
 			common.GetLogger().RegisterLogs()
 			break l1
 		case newRps := <-rpsChan:
@@ -69,29 +69,34 @@ l1:
 				}
 			}
 		default:
-			customLoad := isCustomLoadWindow(&csp.Config, now.Unix())
-			request := requestQueue[requestQueueIter.Next()]
-
-			if customLoad != nil {
-				previousRps = currentRps
-				currentRps = customLoad.Rps
-
-				if previousRps != currentRps {
-					common.GetLogger().Log(fmt.Sprintf("Runtime: %ds, Rps: %d (CUSTOM)", runtime, customLoad.Rps))
-				}
-
-				customRequesterChan <- CustomRequesterPayload{
-					Request:          request,
-					CustomLoadConfig: customLoad,
-				}
+			if now.Unix() >= startTime.Add(csp.Config.EndLoadAt.Duration).Unix() {
+				cancelCtx()
+				continue
 			} else {
-				previousRps = currentRps
-				currentRps = defaultRequesterRps
+				customLoad := isCustomLoadWindow(&csp.Config, now.Unix())
+				request := requestQueue[requestQueueIter.Next()]
 
-				logRps(previousRps, currentRps, runtime)
-				defaultRequesterChan <- DefaultRequesterPayload{
-					Request: request,
-					Rps:     currentRps,
+				if customLoad != nil {
+					previousRps = currentRps
+					currentRps = customLoad.Rps
+
+					if previousRps != currentRps {
+						common.GetLogger().Log(fmt.Sprintf("Runtime: %ds, Rps: %d (CUSTOM)", runtime, customLoad.Rps))
+					}
+
+					customRequesterChan <- CustomRequesterPayload{
+						Request:          request,
+						CustomLoadConfig: customLoad,
+					}
+				} else {
+					previousRps = currentRps
+					currentRps = defaultRequesterRps
+
+					logRps(previousRps, currentRps, runtime)
+					defaultRequesterChan <- DefaultRequesterPayload{
+						Request: request,
+						Rps:     currentRps,
+					}
 				}
 			}
 		}
