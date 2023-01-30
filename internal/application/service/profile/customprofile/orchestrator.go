@@ -26,8 +26,13 @@ func deployCustomProfileOrchestrator(
 	requestCountChan := make(chan int)
 	rpsChan := deployRpsComposer(ctx, startTime, &csp.Config)
 
+	wg.Add(1)
 	go deployErrorThresholdAnalyzer(ctx, cancelCtx, requestCountChan, &csp.Config)
+
+	wg.Add(1)
 	go deployDefaultRequester(ctx, cancelCtx, defaultRequesterChan, requestCountChan)
+
+	wg.Add(1)
 	go deployCustomRequester(ctx, cancelCtx, customRequesterChan, requestCountChan)
 
 	currentRps := int(getInitialRps(&csp.Config))

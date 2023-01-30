@@ -14,6 +14,8 @@ func deployErrorThresholdAnalyzer(
 	reqCountConsumer <-chan int,
 	cpc *CustomProfileConfig,
 ) {
+	defer wg.Done()
+
 	var successfullRequests int
 	var failedRequests int
 	var totalRequests int

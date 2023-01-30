@@ -12,12 +12,10 @@ func deployDefaultRequester(
 	loadsConsumer <-chan DefaultRequesterPayload,
 	reqCountProducer chan<- int,
 ) {
-	wg.Add(1)
-
+	defer wg.Done()
 	for {
 		select {
 		case <-ctx.Done():
-			wg.Done()
 			return
 		case load := <-loadsConsumer:
 			for i := 0; i < load.Rps; i++ {
@@ -36,12 +34,10 @@ func deployCustomRequester(
 	loadsConsumer <-chan CustomRequesterPayload,
 	reqCountProducer chan<- int,
 ) {
-	wg.Add(1)
-
+	defer wg.Done()
 	for {
 		select {
 		case <-ctx.Done():
-			wg.Done()
 			return
 		case load := <-loadsConsumer:
 			for i := 0; i < load.CustomLoadConfig.Rps; i++ {

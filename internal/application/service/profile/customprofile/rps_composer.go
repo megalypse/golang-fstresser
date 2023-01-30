@@ -14,16 +14,17 @@ func deployRpsComposer(ctx context.Context, startTime time.Time, cpc *CustomProf
 
 	wg.Add(1)
 	go func() {
+		defer wg.Done()
+
 		rawRps := getInitialRps(cpc)
 		effectiveRps := int(rawRps)
 		tickerDeadline := startTime.Add(cpc.RampUpTime.Duration).Unix()
+
 	l1:
 		for {
 			select {
 			case <-ctx.Done():
 				close(rpsChan)
-
-				wg.Done()
 				break l1
 			case <-ticker.C:
 				// In case the desired peak RPS have not been met at the end of the rampup time
@@ -34,7 +35,6 @@ func deployRpsComposer(ctx context.Context, startTime time.Time, cpc *CustomProf
 					}
 
 					common.GetLogger().Log("Rampup finished")
-					wg.Done()
 					break l1
 				} else {
 					rawRps += cpc.RpsRampupPace
