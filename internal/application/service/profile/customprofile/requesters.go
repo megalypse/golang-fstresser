@@ -2,13 +2,12 @@ package customprofile
 
 import (
 	"context"
-
-	"github.com/megalypse/golang-fstresser/internal/application/common"
 )
 
 func deployDefaultRequester(
 	ctx context.Context,
 	cancelCtx context.CancelFunc,
+	csp *CustomStressProfile,
 	loadsConsumer <-chan DefaultRequesterPayload,
 	reqCountProducer chan<- int,
 ) {
@@ -20,7 +19,7 @@ func deployDefaultRequester(
 		case load := <-loadsConsumer:
 			for i := 0; i < load.Rps; i++ {
 				go func() {
-					res := common.MakeLightweightRequest(cancelCtx, load.Request)
+					res := csp.MakeRequestUsecase.Request(cancelCtx, load.Request)
 					reqCountProducer <- res.StatusCode
 				}()
 			}
@@ -31,6 +30,7 @@ func deployDefaultRequester(
 func deployCustomRequester(
 	ctx context.Context,
 	cancelCtx context.CancelFunc,
+	csp *CustomStressProfile,
 	loadsConsumer <-chan CustomRequesterPayload,
 	reqCountProducer chan<- int,
 ) {
@@ -42,7 +42,7 @@ func deployCustomRequester(
 		case load := <-loadsConsumer:
 			for i := 0; i < load.CustomLoadConfig.Rps; i++ {
 				go func() {
-					res := common.MakeLightweightRequest(cancelCtx, load.Request)
+					res := csp.MakeRequestUsecase.Request(cancelCtx, load.Request)
 					reqCountProducer <- res.StatusCode
 				}()
 			}

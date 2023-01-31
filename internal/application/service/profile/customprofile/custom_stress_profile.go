@@ -11,16 +11,22 @@ import (
 
 	"github.com/megalypse/golang-fstresser/internal/application/common"
 	"github.com/megalypse/golang-fstresser/internal/domain/entity"
+	"github.com/megalypse/golang-fstresser/internal/domain/usecase"
 )
 
 type CustomStressProfile struct {
-	IsActive bool
-	Requests []CustomProfileRequest
-	Config   CustomProfileConfig
+	IsActive           bool
+	Requests           []CustomProfileRequest
+	Config             CustomProfileConfig
+	MakeRequestUsecase usecase.MakeRequestUsecase
 }
 
-func (csp *CustomStressProfile) StartLoad(ctx context.Context, cancelCtx context.CancelFunc) {
-	deployCustomProfileOrchestrator(ctx, cancelCtx, csp)
+func (csp CustomStressProfile) StartLoad(ctx context.Context, cancelCtx context.CancelFunc) {
+	if !csp.IsActive {
+		return
+	}
+
+	deployCustomProfileOrchestrator(ctx, cancelCtx, &csp)
 }
 
 type CustomProfileRequest struct {

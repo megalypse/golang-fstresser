@@ -30,10 +30,10 @@ func deployCustomProfileOrchestrator(
 	go deployErrorThresholdAnalyzer(ctx, cancelCtx, requestCountChan, &csp.Config)
 
 	wg.Add(1)
-	go deployDefaultRequester(ctx, cancelCtx, defaultRequesterChan, requestCountChan)
+	go deployDefaultRequester(ctx, cancelCtx, csp, defaultRequesterChan, requestCountChan)
 
 	wg.Add(1)
-	go deployCustomRequester(ctx, cancelCtx, customRequesterChan, requestCountChan)
+	go deployCustomRequester(ctx, cancelCtx, csp, customRequesterChan, requestCountChan)
 
 	currentRps := int(getInitialRps(&csp.Config))
 	previousRps := currentRps

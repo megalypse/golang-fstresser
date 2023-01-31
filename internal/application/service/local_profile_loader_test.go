@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/megalypse/golang-fstresser/internal/application/service/profile/customprofile"
+	"github.com/megalypse/golang-fstresser/internal/domain/entity"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,11 +27,13 @@ func init() {
 
 func TestLocalProfileLoading(t *testing.T) {
 	assert := assert.New(t)
-	loader := LocalProfileLoader{}
+	loader := LocalProfileLoader{
+		MakeRequestUsecase: MockMakeRequest{},
+	}
 
 	result := loader.LoadProfile(cancelCtx, testResourcesPath+"/test_profile.json")
-	request := result[0].Requests[0]
-	config := result[0].Config
+	request := result[0].(customprofile.CustomStressProfile).Requests[0]
+	config := result[0].(customprofile.CustomStressProfile).Config
 
 	assert.Equal(1, request.Rate)
 	assert.Equal("POST", request.Method)
@@ -43,4 +47,10 @@ func TestLocalProfileLoading(t *testing.T) {
 	assert.Equal(time.Minute*20, config.CustomLoads[0].StartsAt.Duration)
 	assert.Equal(time.Minute*23, config.CustomLoads[0].EndsAt.Duration)
 	assert.Equal(300, config.CustomLoads[0].Rps)
+}
+
+type MockMakeRequest struct{}
+
+func (MockMakeRequest) Request(context.CancelFunc, *entity.Request) *entity.Response {
+	return &entity.Response{}
 }

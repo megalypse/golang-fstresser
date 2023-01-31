@@ -8,15 +8,18 @@ import (
 
 	"github.com/megalypse/golang-fstresser/internal/application/common"
 	"github.com/megalypse/golang-fstresser/internal/application/service/profile/customprofile"
+	"github.com/megalypse/golang-fstresser/internal/domain/usecase"
 )
 
 type profilesWrapper struct {
 	Profiles []customprofile.CustomStressProfile
 }
 
-type LocalProfileLoader struct{}
+type LocalProfileLoader struct {
+	MakeRequestUsecase usecase.MakeRequestUsecase
+}
 
-func (LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc, profilesPath string) []customprofile.CustomStressProfile {
+func (LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc, profilesPath string) []usecase.StressProfile {
 	if profilesPath == "" {
 		common.GracefulVarnish(cancelCtx, "Profiles path not provided. Ending execution...")
 	}
@@ -30,7 +33,7 @@ func (LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc, profilesPath
 	return ObjectifyProfiles(result)
 }
 
-func ObjectifyProfiles(bytes []byte) []customprofile.CustomStressProfile {
+func ObjectifyProfiles(bytes []byte) []usecase.StressProfile {
 	holder := new(profilesWrapper)
 
 	err := json.Unmarshal(bytes, holder)
@@ -38,5 +41,11 @@ func ObjectifyProfiles(bytes []byte) []customprofile.CustomStressProfile {
 		log.Fatal(err.Error())
 	}
 
-	return holder.Profiles
+	profiles := make([]usecase.StressProfile, 0, len(holder.Profiles))
+	for _, v := range holder.Profiles {
+
+		profiles = append(profiles, v)
+	}
+
+	return profiles
 }
