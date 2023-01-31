@@ -12,5 +12,7 @@ func init() {
 }
 
 func MakeLocalProfileLoader() usecase.ProfileLoader {
-	return service.LocalProfileLoader{}
+	return service.LocalProfileLoader{
+		MakeRequestUsecase: makeRequestUsecase,
+	}
 }

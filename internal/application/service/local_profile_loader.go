@@ -19,7 +19,7 @@ type LocalProfileLoader struct {
 	MakeRequestUsecase usecase.MakeRequestUsecase
 }
 
-func (LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc, profilesPath string) []usecase.StressProfile {
+func (lpl LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc, profilesPath string) []usecase.StressProfile {
 	if profilesPath == "" {
 		common.GracefulVarnish(cancelCtx, "Profiles path not provided. Ending execution...")
 	}
@@ -30,10 +30,10 @@ func (LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc, profilesPath
 		common.GracefulVarnish(cancelCtx, err.Error())
 	}
 
-	return ObjectifyProfiles(result)
+	return lpl.objectifyProfiles(result)
 }
 
-func ObjectifyProfiles(bytes []byte) []usecase.StressProfile {
+func (lpl LocalProfileLoader) objectifyProfiles(bytes []byte) []usecase.StressProfile {
 	holder := new(profilesWrapper)
 
 	err := json.Unmarshal(bytes, holder)
@@ -43,6 +43,7 @@ func ObjectifyProfiles(bytes []byte) []usecase.StressProfile {
 
 	profiles := make([]usecase.StressProfile, 0, len(holder.Profiles))
 	for _, v := range holder.Profiles {
+		v.MakeRequestUsecase = lpl.MakeRequestUsecase
 
 		profiles = append(profiles, v)
 	}
