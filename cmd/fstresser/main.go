@@ -4,13 +4,12 @@ import (
 	"context"
 	"log"
 	"os"
-	"runtime"
 
 	"github.com/megalypse/golang-fstresser/internal/main/factory"
 )
 
 func main() {
-	runtime.GOMAXPROCS(6)
+	// runtime.GOMAXPROCS(6)
 	ctx := context.Background()
 	ctx, cancelCtx := context.WithCancel(ctx)
 

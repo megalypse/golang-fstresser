@@ -65,7 +65,7 @@ l1:
 				}
 			}
 		default:
-			if now.Unix() >= startTime.Add(csp.Config.EndLoadAt.Duration).Unix() {
+			if now.Unix() >= startTime.Add(csp.Config.ExecutionEndsAt.Duration).Unix() {
 				cancelCtx()
 				continue
 			} else {
@@ -97,7 +97,7 @@ l1:
 			}
 		}
 
-		time.Sleep(time.Second)
+		time.Sleep(csp.Config.LoadsInterval.Duration)
 	}
 
 	wg.Wait()

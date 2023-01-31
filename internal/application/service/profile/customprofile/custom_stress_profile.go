@@ -85,9 +85,10 @@ type CustomProfileConfig struct {
 	PeakRps             int
 	RampUpTime          DurationInput
 	CustomLoads         []CustomLoad
-	EndLoadAt           DurationInput
+	ExecutionEndsAt     DurationInput
 	RpsIncreaseInterval DurationInput
 	ErrorThreshold      string
+	LoadsInterval       DurationInput
 
 	// This was created as a computed value to increase load tests flexibility
 	RpsRampupPace float64

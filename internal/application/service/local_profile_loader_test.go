@@ -41,9 +41,9 @@ func TestLocalProfileLoading(t *testing.T) {
 	assert.Equal("application/json", request.Headers["Content-Type"])
 
 	assert.Equal(200, config.PeakRps)
-	assert.Equal(time.Hour, config.EndLoadAt.Duration)
+	assert.Equal(time.Hour, config.ExecutionEndsAt.Duration)
 	assert.Equal(time.Second*20, config.RampUpTime.Duration)
-	assert.Equal(time.Hour, config.EndLoadAt.Duration)
+	assert.Equal(time.Hour, config.ExecutionEndsAt.Duration)
 	assert.Equal(time.Minute*20, config.CustomLoads[0].StartsAt.Duration)
 	assert.Equal(time.Minute*23, config.CustomLoads[0].EndsAt.Duration)
 	assert.Equal(300, config.CustomLoads[0].Rps)
