@@ -8,7 +8,7 @@ import (
 )
 
 // This one purpose is to keep track of whenever a rampup should be made
-func deployRpsComposer(ctx context.Context, startTime time.Time, cpc *CustomProfileConfig) <-chan int {
+func deployRpsComposer(ctx context.Context, startTime time.Time, cpc *CustomProfileConfig) chan int {
 	rpsChan := make(chan int)
 	ticker := time.NewTicker(cpc.RpsIncreaseInterval.Duration)
 
@@ -24,8 +24,7 @@ func deployRpsComposer(ctx context.Context, startTime time.Time, cpc *CustomProf
 		for {
 			select {
 			case <-ctx.Done():
-				close(rpsChan)
-				break l1
+				return
 			case <-ticker.C:
 				// In case the desired peak RPS have not been met at the end of the rampup time
 				nowUnix := time.Now().Unix()

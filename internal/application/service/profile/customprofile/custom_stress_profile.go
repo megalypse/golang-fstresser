@@ -89,6 +89,7 @@ type CustomProfileConfig struct {
 	RpsIncreaseInterval DurationInput
 	ErrorThreshold      string
 	LoadsInterval       DurationInput
+	GlobalHeaders       map[string]string
 
 	// This was created as a computed value to increase load tests flexibility
 	RpsRampupPace float64

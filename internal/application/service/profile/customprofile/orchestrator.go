@@ -24,16 +24,17 @@ func deployCustomProfileOrchestrator(
 	defaultRequesterChan := make(chan DefaultRequesterPayload)
 	customRequesterChan := make(chan CustomRequesterPayload)
 	requestCountChan := make(chan int)
-	rpsChan := deployRpsComposer(ctx, startTime, &csp.Config)
 
 	wg.Add(1)
-	go deployErrorThresholdAnalyzer(ctx, cancelCtx, requestCountChan, &csp.Config)
+	go deployHttpStatusAnalyzer(ctx, cancelCtx, requestCountChan, &csp.Config)
 
 	wg.Add(1)
 	go deployDefaultRequester(ctx, cancelCtx, csp, defaultRequesterChan, requestCountChan)
 
 	wg.Add(1)
 	go deployCustomRequester(ctx, cancelCtx, csp, customRequesterChan, requestCountChan)
+
+	rpsChan := deployRpsComposer(ctx, startTime, &csp.Config)
 
 	currentRps := int(getInitialRps(&csp.Config))
 	previousRps := currentRps
@@ -42,6 +43,7 @@ l1:
 	for {
 		now := time.Now()
 		runtime := time.Now().Unix() - startTime.Unix()
+		durationRuntime := time.Second * time.Duration(runtime)
 
 		select {
 		case <-ctx.Done():
@@ -56,7 +58,7 @@ l1:
 				defaultRequesterRps = currentRps
 
 				if customLoad == nil {
-					logRps(previousRps, currentRps, runtime)
+					logRps(previousRps, currentRps, durationRuntime)
 
 					defaultRequesterChan <- DefaultRequesterPayload{
 						Request: requestQueue[requestQueueIter.Next()],
@@ -77,7 +79,7 @@ l1:
 					currentRps = customLoad.Rps
 
 					if previousRps != currentRps {
-						common.GetLogger().Log(fmt.Sprintf("Runtime: %ds, Rps: %d (CUSTOM)", runtime, customLoad.Rps))
+						common.GetLogger().Log(fmt.Sprintf("Runtime: %s, Rps: %d (CUSTOM)", durationRuntime.String(), customLoad.Rps))
 					}
 
 					customRequesterChan <- CustomRequesterPayload{
@@ -88,7 +90,7 @@ l1:
 					previousRps = currentRps
 					currentRps = defaultRequesterRps
 
-					logRps(previousRps, currentRps, runtime)
+					logRps(previousRps, currentRps, durationRuntime)
 					defaultRequesterChan <- DefaultRequesterPayload{
 						Request: request,
 						Rps:     currentRps,
@@ -105,4 +107,5 @@ l1:
 	close(defaultRequesterChan)
 	close(customRequesterChan)
 	close(requestCountChan)
+	close(rpsChan)
 }

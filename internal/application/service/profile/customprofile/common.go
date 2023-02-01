@@ -18,9 +18,9 @@ func init() {
 	requestQueue = make([]*entity.Request, 0)
 }
 
-func logRps(prevRps, currentRps int, runtime int64) {
+func logRps(prevRps, currentRps int, runtime time.Duration) {
 	if prevRps != currentRps {
-		common.GetLogger().Log(fmt.Sprintf("Runtime: %ds, Rps: %d", runtime, currentRps))
+		common.GetLogger().Log(fmt.Sprintf("Runtime: %s, Rps: %d", runtime.String(), currentRps))
 	}
 }
 

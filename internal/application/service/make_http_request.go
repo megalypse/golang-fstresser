@@ -10,6 +10,6 @@ import (
 type MakeHttpRequestService struct {
 }
 
-func (MakeHttpRequestService) Request(cancelCtx context.CancelFunc, req *entity.Request) *entity.Response {
-	return common.MakeLightweightRequest(cancelCtx, req)
+func (MakeHttpRequestService) Request(cancelCtx context.CancelFunc, req *entity.Request, headers map[string]string) *entity.Response {
+	return common.MakeLightweightRequest(cancelCtx, req, headers)
 }

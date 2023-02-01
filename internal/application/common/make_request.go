@@ -47,7 +47,7 @@ func init() {
 	}
 }
 
-func MakeLightweightRequest(cancelCtx context.CancelFunc, req *entity.Request) *entity.Response {
+func MakeLightweightRequest(cancelCtx context.CancelFunc, req *entity.Request, headers map[string]string) *entity.Response {
 	client := clientPool.Get().(*http.Client)
 	defer clientPool.Put(client)
 
@@ -62,6 +62,11 @@ func MakeLightweightRequest(cancelCtx context.CancelFunc, req *entity.Request) *
 		GetLogger().Log(err.Error())
 		cancelCtx()
 		return &badResponse
+	}
+
+	for k, v := range headers {
+		httpRequest.Header.Add(k, v)
+
 	}
 
 	for k, v := range req.Headers {
@@ -83,7 +88,7 @@ func MakeLightweightRequest(cancelCtx context.CancelFunc, req *entity.Request) *
 			return &badResponse
 		}
 
-		GetLogger().SilentLog((fmt.Sprintf("Request failed with status code %d. Body: %q", res.StatusCode, string(bytes))))
+		GetLogger().SilentLog((fmt.Sprintf("Request failed with status code %d. Url: %q, Body: %q", res.StatusCode, req.Url, string(bytes))))
 		return &badResponse
 	}
 

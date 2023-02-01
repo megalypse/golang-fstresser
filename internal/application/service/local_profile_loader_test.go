@@ -51,6 +51,6 @@ func TestLocalProfileLoading(t *testing.T) {
 
 type MockMakeRequest struct{}
 
-func (MockMakeRequest) Request(context.CancelFunc, *entity.Request) *entity.Response {
+func (MockMakeRequest) Request(context.CancelFunc, *entity.Request, map[string]string) *entity.Response {
 	return &entity.Response{}
 }

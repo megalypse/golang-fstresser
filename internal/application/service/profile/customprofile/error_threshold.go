@@ -9,7 +9,7 @@ import (
 	"github.com/megalypse/golang-fstresser/internal/application/common"
 )
 
-func deployErrorThresholdAnalyzer(
+func deployHttpStatusAnalyzer(
 	ctx context.Context,
 	cancelCtx context.CancelFunc,
 	reqCountConsumer <-chan int,
@@ -44,20 +44,23 @@ func deployErrorThresholdAnalyzer(
 
 			totalRequests = successfullRequests + failedRequests
 
-			switch separated[1] {
-			case "raw":
-				if failedRequests > threshold {
-					common.GetLogger().Log("Error threshold met.")
-					cancelCtx()
-				}
-			default:
-				errPercent := failedRequests * 100 / totalRequests
+			if totalRequests >= 10 {
+				switch separated[1] {
+				case "raw":
+					if failedRequests > threshold {
+						common.GetLogger().Log("Error threshold met.")
+						cancelCtx()
+					}
+				default:
+					errPercent := failedRequests * 100 / totalRequests
 
-				if errPercent > threshold {
-					common.GetLogger().Log("Error threshold met.")
-					cancelCtx()
+					if errPercent > threshold {
+						common.GetLogger().Log("Error threshold met.")
+						cancelCtx()
+					}
 				}
 			}
+
 		}
 	}
 }
