@@ -1,14 +1,23 @@
-MAIN_PATH=./cmd/fstresser/main.go
-BINARY_NAME=./bin/fstresser
+MAIN_PATH=./cmd
+BINARY_NAME=./bin/
+
+.PHONY: all build clean
+
+test:
+	chmod +x ./run.sh
+	./run.sh
 
 build:
-	go build -o ${BINARY_NAME} ${MAIN_PATH}
+	go build -v -o ./bin ${MAIN_PATH}/...
+
+clean:
+	rm -rf ./bin/*
 
 compile:
-	GOARCH=amd64 GOOS=darwin go build -o ${BINARY_NAME}-darwin ${MAIN_PATH} && \
- 	GOARCH=amd64 GOOS=linux go build -o ${BINARY_NAME}-linux ${MAIN_PATH} && \
- 	GOARCH=amd64 GOOS=windows go build -o ${BINARY_NAME}-windows ${MAIN_PATH}
+	chmod +x ./build.sh
+	./build.sh
 
-run: build
-	./${BINARY_NAME}
+run-cli:
+	go run ./cmd/fstresser-cli/main.go
+
 

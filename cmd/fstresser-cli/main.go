@@ -11,6 +11,7 @@ import (
 
 	"github.com/megalypse/golang-fstresser/internal/application/service"
 	"github.com/megalypse/golang-fstresser/internal/application/service/profile/customprofile"
+	"github.com/megalypse/golang-fstresser/internal/domain/usecase"
 	"github.com/megalypse/golang-fstresser/internal/main/factory"
 )
 
@@ -19,17 +20,40 @@ var wg sync.WaitGroup
 func main() {
 	path := os.Getenv("FSTRESSER_PROFILES_PATH")
 
-	ctx := context.Background()
-	ctx, cancelCtx := context.WithCancel(ctx)
-	defer cancelCtx()
-
 	if path == "" {
 		log.Fatal("Profiles path not defined")
 	}
 
 	loader := factory.MakeLocalProfileLoader()
+	wrappers := getWrappers(loader, path)
+	indexes := chooseProfilesIndexes(wrappers)
 
+	runProfiles(loader, indexes, wrappers)
+
+	wg.Wait()
+}
+
+func runProfiles(loader usecase.ProfileLoader, indexes []int, wrappers []*service.ProfilesWrapper) {
+	for _, v := range indexes {
+		for _, profile := range wrappers[v].Profiles {
+			profile.MakeRequestUsecase = loader.(service.LocalProfileLoader).MakeRequestUsecase
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, "profile-name", wrappers[v].ProfileName)
+			ctx, cancelNewCtx := context.WithCancel(ctx)
+
+			wg.Add(1)
+			go func(profile customprofile.CustomStressProfile) {
+				profile.StartLoad(ctx, cancelNewCtx)
+				wg.Done()
+			}(profile)
+		}
+	}
+}
+
+func getWrappers(loader usecase.ProfileLoader, path string) []*service.ProfilesWrapper {
 	profiles := findProfiles(path)
+
 	wrappers := make([]*service.ProfilesWrapper, 0, len(profiles))
 
 	for _, v := range profiles {
@@ -42,6 +66,10 @@ func main() {
 		wrappers = append(wrappers, wrapper)
 	}
 
+	return wrappers
+}
+
+func chooseProfilesIndexes(wrappers []*service.ProfilesWrapper) []int {
 	fmt.Println("Choose the desired profiles to be run:")
 	for i, v := range wrappers {
 		fmt.Println(i, v.ProfileName)
@@ -52,27 +80,18 @@ func main() {
 
 	splittedChoices := strings.Split(chosenProfilesRaw, ",")
 
+	finalList := make([]int, 0, len(splittedChoices))
+
 	for _, v := range splittedChoices {
 		parsed, err := strconv.Atoi(v)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 
-		for _, profile := range wrappers[parsed].Profiles {
-			profile.MakeRequestUsecase = loader.(service.LocalProfileLoader).MakeRequestUsecase
-
-			newCtx := context.WithValue(ctx, "profile-name", wrappers[parsed].ProfileName)
-			newCtx, cancelNewCtx := context.WithCancel(newCtx)
-
-			wg.Add(1)
-			go func(profile customprofile.CustomStressProfile) {
-				profile.StartLoad(newCtx, cancelNewCtx)
-				wg.Done()
-			}(profile)
-		}
+		finalList = append(finalList, parsed)
 	}
 
-	wg.Wait()
+	return finalList
 }
 
 func findProfiles(path string) []string {
