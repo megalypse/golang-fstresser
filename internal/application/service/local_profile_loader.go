@@ -11,8 +11,9 @@ import (
 	"github.com/megalypse/golang-fstresser/internal/domain/usecase"
 )
 
-type profilesWrapper struct {
-	Profiles []customprofile.CustomStressProfile
+type ProfilesWrapper struct {
+	ProfileName string
+	Profiles    []customprofile.CustomStressProfile
 }
 
 type LocalProfileLoader struct {
@@ -30,23 +31,25 @@ func (lpl LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc, profiles
 		common.GracefulVarnish(cancelCtx, err.Error())
 	}
 
-	return lpl.objectifyProfiles(result)
-}
+	profilesWrapper := lpl.ObjectifyProfiles(result)
 
-func (lpl LocalProfileLoader) objectifyProfiles(bytes []byte) []usecase.StressProfile {
-	holder := new(profilesWrapper)
-
-	err := json.Unmarshal(bytes, holder)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	profiles := make([]usecase.StressProfile, 0, len(holder.Profiles))
-	for _, v := range holder.Profiles {
+	profiles := make([]usecase.StressProfile, 0, len(profilesWrapper.Profiles))
+	for _, v := range profilesWrapper.Profiles {
 		v.MakeRequestUsecase = lpl.MakeRequestUsecase
 
 		profiles = append(profiles, v)
 	}
 
 	return profiles
+}
+
+func (lpl LocalProfileLoader) ObjectifyProfiles(bytes []byte) *ProfilesWrapper {
+	holder := new(ProfilesWrapper)
+
+	err := json.Unmarshal(bytes, holder)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return holder
 }

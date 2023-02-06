@@ -32,7 +32,7 @@ func deployHttpStatusAnalyzer(
 	for {
 		select {
 		case <-ctx.Done():
-			message := fmt.Sprintf("Requests done: %d\nSuccess: %d\nFailed: %d", totalRequests, successfullRequests, failedRequests)
+			message := fmt.Sprintf("(%s) Requests done: %d\nSuccess: %d\nFailed: %d", ctx.Value("profile-name"), totalRequests, successfullRequests, failedRequests)
 			common.GetLogger().Log(message)
 			return
 		case httpStatus := <-reqCountConsumer:
@@ -43,19 +43,19 @@ func deployHttpStatusAnalyzer(
 			}
 
 			totalRequests = successfullRequests + failedRequests
-
+			errMsg := fmt.Sprintf("(%s) Error threshold met", ctx.Value("profile-name"))
 			if totalRequests >= 10 {
 				switch separated[1] {
 				case "raw":
 					if failedRequests > threshold {
-						common.GetLogger().Log("Error threshold met.")
+						common.GetLogger().Log(errMsg)
 						cancelCtx()
 					}
 				default:
 					errPercent := failedRequests * 100 / totalRequests
 
 					if errPercent > threshold {
-						common.GetLogger().Log("Error threshold met.")
+						common.GetLogger().Log(errMsg)
 						cancelCtx()
 					}
 				}

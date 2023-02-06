@@ -1,6 +1,7 @@
 package customprofile
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -18,9 +19,9 @@ func init() {
 	requestQueue = make([]*entity.Request, 0)
 }
 
-func logRps(prevRps, currentRps int, runtime time.Duration) {
+func logRps(ctx context.Context, prevRps, currentRps int, runtime time.Duration) {
 	if prevRps != currentRps {
-		common.GetLogger().Log(fmt.Sprintf("Runtime: %s, Rps: %d", runtime.String(), currentRps))
+		common.GetLogger().Log(fmt.Sprintf("(%s) Runtime: %s, Rps: %d", ctx.Value("profile-name"), runtime.String(), currentRps))
 	}
 }
 

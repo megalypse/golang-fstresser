@@ -47,7 +47,7 @@ l1:
 
 		select {
 		case <-ctx.Done():
-			common.GetLogger().Log(fmt.Sprintf("Execution finished. Took %ds", runtime))
+			common.GetLogger().Log(fmt.Sprintf("(%s) Execution finished. Took %ds", ctx.Value("profile-name"), runtime))
 			common.GetLogger().RegisterLogs()
 			break l1
 		case newRps := <-rpsChan:
@@ -58,7 +58,7 @@ l1:
 				defaultRequesterRps = currentRps
 
 				if customLoad == nil {
-					logRps(previousRps, currentRps, durationRuntime)
+					logRps(ctx, previousRps, currentRps, durationRuntime)
 
 					defaultRequesterChan <- DefaultRequesterPayload{
 						Request: requestQueue[requestQueueIter.Next()],
@@ -79,7 +79,7 @@ l1:
 					currentRps = customLoad.Rps
 
 					if previousRps != currentRps {
-						common.GetLogger().Log(fmt.Sprintf("Runtime: %s, Rps: %d (CUSTOM)", durationRuntime.String(), customLoad.Rps))
+						common.GetLogger().Log(fmt.Sprintf("(%s) Runtime: %s, Rps: %d (CUSTOM)", ctx.Value("profile-name"), durationRuntime.String(), currentRps))
 					}
 
 					customRequesterChan <- CustomRequesterPayload{
@@ -90,7 +90,7 @@ l1:
 					previousRps = currentRps
 					currentRps = defaultRequesterRps
 
-					logRps(previousRps, currentRps, durationRuntime)
+					logRps(ctx, previousRps, currentRps, durationRuntime)
 					defaultRequesterChan <- DefaultRequesterPayload{
 						Request: request,
 						Rps:     currentRps,
