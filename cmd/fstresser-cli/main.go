@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/megalypse/golang-fstresser/internal/application/common"
 	"github.com/megalypse/golang-fstresser/internal/application/service"
 	"github.com/megalypse/golang-fstresser/internal/application/service/profile/customprofile"
 	"github.com/megalypse/golang-fstresser/internal/domain/usecase"
@@ -18,6 +19,12 @@ import (
 var wg sync.WaitGroup
 
 func main() {
+	ctx := context.Background()
+	ctx, cancelCtx := context.WithCancel(ctx)
+
+	defer cancelCtx()
+	defer common.HandlePanic(cancelCtx)
+
 	path := os.Getenv("FSTRESSER_PROFILES_PATH")
 
 	if path == "" {
@@ -28,17 +35,21 @@ func main() {
 	wrappers := getWrappers(loader, path)
 	indexes := chooseProfilesIndexes(wrappers)
 
-	runProfiles(loader, indexes, wrappers)
+	runProfiles(ctx, loader, indexes, wrappers)
 
 	wg.Wait()
 }
 
-func runProfiles(loader usecase.ProfileLoader, indexes []int, wrappers []*service.ProfilesWrapper) {
+func runProfiles(
+	ctx context.Context,
+	loader usecase.ProfileLoader,
+	indexes []int,
+	wrappers []*service.ProfilesWrapper,
+) {
 	for _, v := range indexes {
 		for _, profile := range wrappers[v].Profiles {
 			profile.MakeRequestUsecase = loader.(service.LocalProfileLoader).MakeRequestUsecase
 
-			ctx := context.Background()
 			ctx = context.WithValue(ctx, "profile-name", wrappers[v].ProfileName)
 			ctx, cancelNewCtx := context.WithCancel(ctx)
 

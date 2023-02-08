@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/megalypse/golang-fstresser/internal/application/common"
 	"github.com/megalypse/golang-fstresser/internal/main/factory"
 )
 
@@ -12,6 +13,8 @@ func main() {
 	// runtime.GOMAXPROCS(6)
 	ctx := context.Background()
 	ctx, cancelCtx := context.WithCancel(ctx)
+
+	defer common.HandlePanic(cancelCtx)
 
 	path := os.Getenv("FSTRESSER_PROFILES_PATH")
 	if path == "" {

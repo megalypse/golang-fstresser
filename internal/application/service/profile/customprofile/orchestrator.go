@@ -13,6 +13,7 @@ func deployCustomProfileOrchestrator(
 	cancelCtx context.CancelFunc,
 	csp *CustomStressProfile,
 ) {
+
 	startTime := time.Now()
 
 	csp.Config.bootstrap()
@@ -104,8 +105,8 @@ l1:
 
 	wg.Wait()
 
-	close(defaultRequesterChan)
-	close(customRequesterChan)
-	close(requestCountChan)
-	close(rpsChan)
+	defer close(defaultRequesterChan)
+	defer close(customRequesterChan)
+	defer close(requestCountChan)
+	defer close(rpsChan)
 }

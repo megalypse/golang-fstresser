@@ -20,4 +20,7 @@ compile:
 run-cli:
 	go run ./cmd/fstresser-cli/main.go
 
+clear-logs:
+	rm -rf ./logs/*
+
 
