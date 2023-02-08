@@ -2,7 +2,10 @@ package customprofile
 
 import (
 	"context"
+	"sync"
 )
+
+var defaultReqWg sync.WaitGroup
 
 func deployDefaultRequester(
 	ctx context.Context,
@@ -38,12 +41,15 @@ func deployCustomRequester(
 	for {
 		select {
 		case <-ctx.Done():
+			defaultReqWg.Wait()
 			return
 		case load := <-loadsConsumer:
 			for i := 0; i < load.CustomLoadConfig.Rps; i++ {
+				defaultReqWg.Add(1)
 				go func() {
 					res := csp.MakeRequestUsecase.Request(cancelCtx, load.Request, csp.Config.GlobalHeaders)
 					reqCountProducer <- res.StatusCode
+					defaultReqWg.Done()
 				}()
 			}
 		}
