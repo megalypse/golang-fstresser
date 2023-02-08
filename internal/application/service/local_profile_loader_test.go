@@ -31,7 +31,7 @@ func TestLocalProfileLoading(t *testing.T) {
 		MakeRequestUsecase: MockMakeRequest{},
 	}
 
-	result := loader.LoadProfile(cancelCtx, testResourcesPath+"/test_profile.json")
+	result := loader.LoadProfile(ctx, cancelCtx, testResourcesPath+"/test_profile.json")
 	request := result[0].(customprofile.CustomStressProfile).Requests[0]
 	config := result[0].(customprofile.CustomStressProfile).Config
 
@@ -51,6 +51,6 @@ func TestLocalProfileLoading(t *testing.T) {
 
 type MockMakeRequest struct{}
 
-func (MockMakeRequest) Request(context.CancelFunc, *entity.Request, map[string]string) *entity.Response {
+func (MockMakeRequest) Request(context.Context, context.CancelFunc, *entity.Request, map[string]string) *entity.Response {
 	return &entity.Response{}
 }

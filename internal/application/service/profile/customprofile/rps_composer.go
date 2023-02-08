@@ -33,7 +33,7 @@ func deployRpsComposer(ctx context.Context, startTime time.Time, cpc *CustomProf
 						rpsChan <- cpc.PeakRps
 					}
 
-					common.GetLogger().Log("Rampup finished")
+					common.GetLogger(ctx).Log("Rampup finished")
 					break l1
 				} else {
 					rawRps += cpc.RpsRampupPace

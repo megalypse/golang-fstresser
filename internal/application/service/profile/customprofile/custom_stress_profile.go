@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/megalypse/golang-fstresser/internal/application/common"
 	"github.com/megalypse/golang-fstresser/internal/domain/entity"
 	"github.com/megalypse/golang-fstresser/internal/domain/usecase"
 )
@@ -41,7 +41,7 @@ func (cpr CustomProfileRequest) ToEntity() entity.Request {
 	res, err := json.Marshal(cpr.Body.JsonBody)
 
 	if err != nil {
-		common.GetLogger().Log(err.Error())
+		log.Fatal(err.Error())
 	}
 
 	return entity.Request{

@@ -3,6 +3,7 @@ package customprofile
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -21,7 +22,7 @@ func init() {
 
 func logRps(ctx context.Context, prevRps, currentRps int, runtime time.Duration) {
 	if prevRps != currentRps {
-		common.GetLogger().Log(fmt.Sprintf("(%s) Runtime: %s, Rps: %d", ctx.Value("profile-name"), runtime.String(), currentRps))
+		common.GetLogger(ctx).Log(fmt.Sprintf("(%s) Runtime: %s, Rps: %d", ctx.Value("profile-name"), runtime.String(), currentRps))
 	}
 }
 
@@ -37,7 +38,7 @@ func isCustomLoadWindow(cpc *CustomProfileConfig, now int64) *CustomLoad {
 
 func generateRequestQueue(maxCount int) RateCounter {
 	if maxCount < 0 {
-		common.GetLogger().Log("Max count must be a positive number")
+		log.Fatal("Max count must be a positive number")
 	}
 
 	return RateCounter{

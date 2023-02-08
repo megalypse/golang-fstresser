@@ -22,7 +22,7 @@ func deployDefaultRequester(
 		case load := <-loadsConsumer:
 			for i := 0; i < load.Rps; i++ {
 				go func() {
-					res := csp.MakeRequestUsecase.Request(cancelCtx, load.Request, csp.Config.GlobalHeaders)
+					res := csp.MakeRequestUsecase.Request(ctx, cancelCtx, load.Request, csp.Config.GlobalHeaders)
 					reqCountProducer <- res.StatusCode
 				}()
 			}
@@ -47,7 +47,7 @@ func deployCustomRequester(
 			for i := 0; i < load.CustomLoadConfig.Rps; i++ {
 				defaultReqWg.Add(1)
 				go func() {
-					res := csp.MakeRequestUsecase.Request(cancelCtx, load.Request, csp.Config.GlobalHeaders)
+					res := csp.MakeRequestUsecase.Request(ctx, cancelCtx, load.Request, csp.Config.GlobalHeaders)
 					reqCountProducer <- res.StatusCode
 					defaultReqWg.Done()
 				}()

@@ -23,7 +23,7 @@ func main() {
 	ctx, cancelCtx := context.WithCancel(ctx)
 
 	defer cancelCtx()
-	defer common.HandlePanic(cancelCtx)
+	defer common.HandlePanic(ctx, cancelCtx)
 
 	path := os.Getenv("FSTRESSER_PROFILES_PATH")
 

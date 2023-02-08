@@ -47,7 +47,7 @@ func init() {
 	}
 }
 
-func MakeLightweightRequest(cancelCtx context.CancelFunc, req *entity.Request, headers map[string]string) *entity.Response {
+func MakeLightweightRequest(ctx context.Context, cancelCtx context.CancelFunc, req *entity.Request, headers map[string]string) *entity.Response {
 	client := clientPool.Get().(*http.Client)
 	defer clientPool.Put(client)
 
@@ -59,7 +59,7 @@ func MakeLightweightRequest(cancelCtx context.CancelFunc, req *entity.Request, h
 	httpRequest.Close = true
 
 	if err != nil {
-		GetLogger().Log(err.Error())
+		GetLogger(ctx).Log(err.Error())
 		cancelCtx()
 		return &badResponse
 	}
@@ -75,7 +75,7 @@ func MakeLightweightRequest(cancelCtx context.CancelFunc, req *entity.Request, h
 
 	res, err := client.Do(httpRequest)
 	if err != nil {
-		GetLogger().SilentLog(err.Error())
+		GetLogger(ctx).SilentLog(err.Error())
 		return &badResponse
 	}
 	defer res.Body.Close()
@@ -83,12 +83,12 @@ func MakeLightweightRequest(cancelCtx context.CancelFunc, req *entity.Request, h
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		bytes, err := io.ReadAll(res.Body)
 		if err != nil {
-			GetLogger().Log(err.Error())
+			GetLogger(ctx).Log(err.Error())
 			cancelCtx()
 			return &badResponse
 		}
 
-		GetLogger().SilentLog((fmt.Sprintf("Request failed with status code %d. Url: %q, Body: %q", res.StatusCode, req.Url, string(bytes))))
+		GetLogger(ctx).SilentLog((fmt.Sprintf("Request failed with status code %d. Url: %q, Body: %q", res.StatusCode, req.Url, string(bytes))))
 		return &badResponse
 	}
 

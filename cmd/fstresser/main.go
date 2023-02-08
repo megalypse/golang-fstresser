@@ -14,7 +14,7 @@ func main() {
 	ctx := context.Background()
 	ctx, cancelCtx := context.WithCancel(ctx)
 
-	defer common.HandlePanic(cancelCtx)
+	defer common.HandlePanic(ctx, cancelCtx)
 
 	path := os.Getenv("FSTRESSER_PROFILES_PATH")
 	if path == "" {
@@ -23,7 +23,7 @@ func main() {
 
 	loader := factory.MakeLocalProfileLoader()
 
-	profiles := loader.LoadProfile(cancelCtx, path)
+	profiles := loader.LoadProfile(ctx, cancelCtx, path)
 
 	for _, profile := range profiles {
 		profile.StartLoad(ctx, cancelCtx)

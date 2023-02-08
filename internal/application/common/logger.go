@@ -2,28 +2,49 @@ package common
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 )
 
-var lgr *Logger
+var lgrMap map[string]*Logger
 
-func GetLogger() *Logger {
-	if lgr == nil {
-		lgr = &Logger{
-			buffer: bytes.NewBuffer([]byte{}),
-		}
+func init() {
+	lgrMap = make(map[string]*Logger)
+}
+
+func GetLogger(ctx context.Context) *Logger {
+	profileName := ctx.Value("profile-name").(string)
+
+	return getLogger(profileName)
+}
+
+func getLogger(lgrName string) *Logger {
+	lgr, ok := lgrMap[lgrName]
+
+	if !ok {
+		lgr = getNewLogger(lgrName)
+		lgrMap[lgrName] = lgr
 	}
 
 	return lgr
 }
 
+func getNewLogger(lgrName string) *Logger {
+	return &Logger{
+		buffer:  bytes.NewBuffer([]byte{}),
+		lgrName: lgrName,
+	}
+}
+
 type Logger struct {
-	buffer *bytes.Buffer
+	buffer  *bytes.Buffer
+	lgrName string
 }
 
 func (l Logger) Log(message string) {
@@ -65,12 +86,14 @@ func (l Logger) RegisterLogs() {
 	_, b, _, _ := runtime.Caller(0)
 	basepath := filepath.Dir(b)
 	logsDir := basepath + "/../../../logs"
-	fileName := fmt.Sprintf(logsDir+"/%d.txt", time.Now().UnixMilli())
+
+	profileName := strings.ReplaceAll(l.lgrName, " ", "_")
+	fileName := fmt.Sprintf(logsDir+"/%s_%d.txt", profileName, time.Now().UnixMilli())
 
 	os.Mkdir(logsDir, 0777)
-	err := os.WriteFile(fileName, lgr.GetBuffer(), 0644)
+	err := os.WriteFile(fileName, l.GetBuffer(), 0644)
 	if err != nil {
-		GetLogger().Log(err.Error())
+		l.Log(err.Error())
 	}
 
 	log.Println("Logs saved successfully.")

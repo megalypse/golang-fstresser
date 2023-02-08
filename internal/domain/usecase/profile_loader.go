@@ -3,5 +3,5 @@ package usecase
 import "context"
 
 type ProfileLoader interface {
-	LoadProfile(cancelCtx context.CancelFunc, profilesPath string) []StressProfile
+	LoadProfile(ctx context.Context, cancelCtx context.CancelFunc, profilesPath string) []StressProfile
 }

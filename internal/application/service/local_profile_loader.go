@@ -20,15 +20,15 @@ type LocalProfileLoader struct {
 	MakeRequestUsecase usecase.MakeRequestUsecase
 }
 
-func (lpl LocalProfileLoader) LoadProfile(cancelCtx context.CancelFunc, profilesPath string) []usecase.StressProfile {
+func (lpl LocalProfileLoader) LoadProfile(ctx context.Context, cancelCtx context.CancelFunc, profilesPath string) []usecase.StressProfile {
 	if profilesPath == "" {
-		common.GracefulVarnish(cancelCtx, "Profiles path not provided. Ending execution...")
+		common.GracefulVarnish(ctx, cancelCtx, "Profiles path not provided. Ending execution...")
 	}
 
 	result, err := os.ReadFile(profilesPath)
 
 	if err != nil {
-		common.GracefulVarnish(cancelCtx, err.Error())
+		common.GracefulVarnish(ctx, cancelCtx, err.Error())
 	}
 
 	profilesWrapper := lpl.ObjectifyProfiles(result)

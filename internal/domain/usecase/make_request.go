@@ -7,5 +7,5 @@ import (
 )
 
 type MakeRequestUsecase interface {
-	Request(context.CancelFunc, *entity.Request, map[string]string) *entity.Response
+	Request(context.Context, context.CancelFunc, *entity.Request, map[string]string) *entity.Response
 }
