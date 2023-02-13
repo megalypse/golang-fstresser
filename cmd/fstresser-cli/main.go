@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -19,6 +20,8 @@ import (
 var wg sync.WaitGroup
 
 func main() {
+	runtime.GOMAXPROCS(6)
+
 	ctx := context.Background()
 	ctx, cancelCtx := context.WithCancel(ctx)
 
