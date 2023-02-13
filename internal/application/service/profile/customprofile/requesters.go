@@ -2,10 +2,7 @@ package customprofile
 
 import (
 	"context"
-	"sync"
 )
-
-var defaultReqWg sync.WaitGroup
 
 func deployDefaultRequester(
 	ctx context.Context,
@@ -19,12 +16,19 @@ func deployDefaultRequester(
 		select {
 		case <-ctx.Done():
 			return
-		case load := <-loadsConsumer:
+		case load, ok := <-loadsConsumer:
+			if !ok {
+				return
+			}
+
 			for i := 0; i < load.Rps; i++ {
-				go func() {
+				go func(isChannelOpen bool) {
 					res := csp.MakeRequestUsecase.Request(ctx, cancelCtx, load.Request, csp.Config.GlobalHeaders)
-					reqCountProducer <- res.StatusCode
-				}()
+
+					if isChannelOpen {
+						reqCountProducer <- res.StatusCode
+					}
+				}(ok)
 			}
 		}
 	}
@@ -41,16 +45,20 @@ func deployCustomRequester(
 	for {
 		select {
 		case <-ctx.Done():
-			defaultReqWg.Wait()
 			return
-		case load := <-loadsConsumer:
+		case load, ok := <-loadsConsumer:
+			if !ok {
+				return
+			}
+
 			for i := 0; i < load.CustomLoadConfig.Rps; i++ {
-				defaultReqWg.Add(1)
-				go func() {
+				go func(isChannelOpen bool) {
 					res := csp.MakeRequestUsecase.Request(ctx, cancelCtx, load.Request, csp.Config.GlobalHeaders)
-					reqCountProducer <- res.StatusCode
-					defaultReqWg.Done()
-				}()
+
+					if isChannelOpen {
+						reqCountProducer <- res.StatusCode
+					}
+				}(ok)
 			}
 		}
 	}
