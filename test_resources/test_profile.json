@@ -1,7 +1,29 @@
 {
+  "ProfileName": "Test profile",
   "Profiles": [
     {
       "IsActive": true,
+      "Config": {
+        "GlobalHeaders": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer -",
+          "Accept-Encoding": "gzip, deflate, br",
+          "Connection": "keep-alive"
+        },
+        "ErrorThreshold": "50:percent",
+        "LoadsInterval": "1:sec",
+        "PeakRps": 200,
+        "RampUpTime": "20:sec",
+        "RpsIncreaseInterval": "5:sec",
+        "ExecutionEndsAt": "1:hour",
+        "CustomLoads": [
+          {
+            "StartsAt": "20:min",
+            "EndsAt": "23:min",
+            "Rps": 300
+          }
+        ]
+      },
       "Requests": [
         {
           "Rate": 1,
@@ -10,24 +32,9 @@
           "Body": {
             "BodyType": "JSON",
             "Body": [1]
-          },
-          "Headers": {
-            "Content-Type": "application/json"
           }
         }
-      ],
-      "Config": {
-        "PeakRps": 200,
-        "RampUpTime": "20:sec",
-        "CustomLoads": [
-          {
-            "StartsAt": "20:min",
-            "EndsAt": "23:min",
-            "Rps": 300
-          }
-        ],
-        "EndLoadAt": "1:hour"
-      }
+      ]
     }
   ]
 }
