@@ -32,7 +32,7 @@ func deployHttpStatusAnalyzer(
 	for {
 		select {
 		case <-ctx.Done():
-			message := fmt.Sprintf("(%s) Requests done: %d\nSuccess: %d\nFailed: %d", ctx.Value("profile-name"), totalRequests, successfullRequests, failedRequests)
+			message := fmt.Sprintf("(%s) Requests done: %d\nSuccess: %d\nFailed: %d", ctx.Value(common.GetCtxKey("profile-name")), totalRequests, successfullRequests, failedRequests)
 			common.GetLogger(ctx).Log(message)
 			return
 		case httpStatus := <-reqCountConsumer:
@@ -43,7 +43,7 @@ func deployHttpStatusAnalyzer(
 			}
 
 			totalRequests = successfullRequests + failedRequests
-			errMsg := fmt.Sprintf("(%s) Error threshold met", ctx.Value("profile-name"))
+			errMsg := fmt.Sprintf("(%s) Error threshold met", ctx.Value(common.GetCtxKey("profile-name")))
 			if totalRequests >= 10 {
 				switch separated[1] {
 				case "raw":

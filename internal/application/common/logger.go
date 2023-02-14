@@ -19,7 +19,8 @@ func init() {
 }
 
 func GetLogger(ctx context.Context) *Logger {
-	profileName := ctx.Value("profile-name").(string)
+
+	profileName := ctx.Value(GetCtxKey("profile-name")).(string)
 
 	return getLogger(profileName)
 }

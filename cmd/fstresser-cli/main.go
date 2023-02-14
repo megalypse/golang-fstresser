@@ -52,7 +52,7 @@ func runProfiles(
 		for _, profile := range wrappers[v].Profiles {
 			profile.MakeRequestUsecase = loader.(service.LocalProfileLoader).MakeRequestUsecase
 
-			ctx = context.WithValue(ctx, "profile-name", wrappers[v].ProfileName)
+			ctx = context.WithValue(ctx, common.GetCtxKey("profile-name"), wrappers[v].ProfileName)
 			ctx, cancelNewCtx := context.WithCancel(ctx)
 
 			wg.Add(1)

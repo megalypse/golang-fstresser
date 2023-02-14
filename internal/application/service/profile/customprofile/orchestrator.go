@@ -48,7 +48,7 @@ l1:
 
 		select {
 		case <-ctx.Done():
-			common.GetLogger(ctx).Log(fmt.Sprintf("(%s) Execution finished. Took %ds", ctx.Value("profile-name"), runtime))
+			common.GetLogger(ctx).Log(fmt.Sprintf("(%s) Execution finished. Took %ds", ctx.Value(common.GetCtxKey("profile-name")), runtime))
 			common.GetLogger(ctx).RegisterLogs()
 			break l1
 		case newRps := <-rpsChan:
@@ -80,7 +80,7 @@ l1:
 					currentRps = customLoad.Rps
 
 					if previousRps != currentRps {
-						common.GetLogger(ctx).Log(fmt.Sprintf("(%s) Runtime: %s, Rps: %d (CUSTOM)", ctx.Value("profile-name"), durationRuntime.String(), currentRps))
+						common.GetLogger(ctx).Log(fmt.Sprintf("(%s) Runtime: %s, Rps: %d (CUSTOM)", ctx.Value(common.GetCtxKey("profile-name")), durationRuntime.String(), currentRps))
 					}
 
 					customRequesterChan <- CustomRequesterPayload{
