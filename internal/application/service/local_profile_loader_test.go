@@ -29,9 +29,10 @@ func TestLocalProfileLoading(t *testing.T) {
 	assert := assert.New(t)
 	loader := LocalProfileLoader{
 		MakeRequestUsecase: MockMakeRequest{},
+		ProfilesPath:       testResourcesPath + "/test_profile.json",
 	}
 
-	result := loader.LoadProfile(ctx, cancelCtx, testResourcesPath+"/test_profile.json")
+	result := loader.LoadProfile(ctx, cancelCtx)
 	request := result[0].(customprofile.CustomStressProfile).Requests[0]
 	config := result[0].(customprofile.CustomStressProfile).Config
 

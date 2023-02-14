@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
-	"os"
 
 	"github.com/megalypse/golang-fstresser/internal/application/common"
 	"github.com/megalypse/golang-fstresser/internal/main/factory"
@@ -16,14 +14,9 @@ func main() {
 
 	defer common.HandlePanic(ctx, cancelCtx)
 
-	path := os.Getenv("FSTRESSER_PROFILES_PATH")
-	if path == "" {
-		log.Fatal("Profiles path not defined")
-	}
-
 	loader := factory.MakeLocalProfileLoader()
 
-	profiles := loader.LoadProfile(ctx, cancelCtx, path)
+	profiles := loader.LoadProfile(ctx, cancelCtx)
 
 	for _, profile := range profiles {
 		profile.StartLoad(ctx, cancelCtx)

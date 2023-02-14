@@ -12,7 +12,6 @@ import (
 
 	"github.com/megalypse/golang-fstresser/internal/application/common"
 	"github.com/megalypse/golang-fstresser/internal/application/service"
-	"github.com/megalypse/golang-fstresser/internal/application/service/profile/customprofile"
 	"github.com/megalypse/golang-fstresser/internal/domain/usecase"
 	"github.com/megalypse/golang-fstresser/internal/main/factory"
 )
@@ -57,7 +56,7 @@ func runProfiles(
 			ctx, cancelNewCtx := context.WithCancel(ctx)
 
 			wg.Add(1)
-			go func(profile customprofile.CustomStressProfile) {
+			go func(profile usecase.StressProfile) {
 				profile.StartLoad(ctx, cancelNewCtx)
 				wg.Done()
 			}(profile)
