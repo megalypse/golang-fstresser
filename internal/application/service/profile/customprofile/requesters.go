@@ -27,6 +27,8 @@ func deployDefaultRequester(
 
 			for i := 0; i < load.Rps; i++ {
 				go func(isChannelOpen bool) {
+					defer common.HandlePanic(ctx, cancelCtx)
+
 					res := csp.MakeRequestUsecase.Request(ctx, cancelCtx, load.Request, csp.Config.GlobalHeaders)
 
 					if isChannelOpen {
@@ -59,6 +61,8 @@ func deployCustomRequester(
 
 			for i := 0; i < load.CustomLoadConfig.Rps; i++ {
 				go func(isChannelOpen bool) {
+					defer common.HandlePanic(ctx, cancelCtx)
+
 					res := csp.MakeRequestUsecase.Request(ctx, cancelCtx, load.Request, csp.Config.GlobalHeaders)
 
 					if isChannelOpen {
