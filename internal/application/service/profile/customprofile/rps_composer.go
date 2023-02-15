@@ -8,13 +8,14 @@ import (
 )
 
 // This one purpose is to keep track of whenever a rampup should be made
-func deployRpsComposer(ctx context.Context, startTime time.Time, cpc *CustomProfileConfig) chan int {
+func deployRpsComposer(ctx context.Context, cancelCtx context.CancelFunc, startTime time.Time, cpc *CustomProfileConfig) chan int {
 	rpsChan := make(chan int)
 	ticker := time.NewTicker(cpc.RpsIncreaseInterval.Duration)
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer common.HandlePanic(ctx, cancelCtx)
 
 		rawRps := getInitialRps(cpc)
 		effectiveRps := int(rawRps)

@@ -13,6 +13,7 @@ func deployCustomProfileOrchestrator(
 	cancelCtx context.CancelFunc,
 	csp *CustomStressProfile,
 ) {
+	defer common.HandlePanic(ctx, cancelCtx)
 
 	startTime := time.Now()
 
@@ -35,7 +36,7 @@ func deployCustomProfileOrchestrator(
 	wg.Add(1)
 	go deployCustomRequester(ctx, cancelCtx, csp, customRequesterChan, requestCountChan)
 
-	rpsChan := deployRpsComposer(ctx, startTime, &csp.Config)
+	rpsChan := deployRpsComposer(ctx, cancelCtx, startTime, &csp.Config)
 
 	currentRps := int(getInitialRps(&csp.Config))
 	previousRps := currentRps

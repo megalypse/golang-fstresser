@@ -2,6 +2,8 @@ package customprofile
 
 import (
 	"context"
+
+	"github.com/megalypse/golang-fstresser/internal/application/common"
 )
 
 func deployDefaultRequester(
@@ -12,6 +14,8 @@ func deployDefaultRequester(
 	reqCountProducer chan<- int,
 ) {
 	defer wg.Done()
+	defer common.HandlePanic(ctx, cancelCtx)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -42,6 +46,8 @@ func deployCustomRequester(
 	reqCountProducer chan<- int,
 ) {
 	defer wg.Done()
+	defer common.HandlePanic(ctx, cancelCtx)
+
 	for {
 		select {
 		case <-ctx.Done():

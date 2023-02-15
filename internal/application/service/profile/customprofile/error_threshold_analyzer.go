@@ -16,6 +16,7 @@ func deployHttpStatusAnalyzer(
 	cpc *CustomProfileConfig,
 ) {
 	defer wg.Done()
+	defer common.HandlePanic(ctx, cancelCtx)
 
 	var successfullRequests int
 	var failedRequests int

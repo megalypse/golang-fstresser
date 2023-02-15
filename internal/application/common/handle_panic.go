@@ -7,10 +7,9 @@ import (
 
 func HandlePanic(ctx context.Context, cancelCtx context.CancelFunc) {
 	if err := recover(); err != nil {
-		errMsg := fmt.Sprint(err)
-		GetLogger(ctx).Log(errMsg)
+		errMsg := fmt.Sprintf("Runtime panicked with %v", err)
 
-		cancelCtx()
+		GracefulVarnish(ctx, cancelCtx, errMsg)
 
 		GetLogger(ctx).RegisterLogs()
 	}
