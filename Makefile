@@ -3,10 +3,6 @@ BINARY_NAME=./bin/
 
 .PHONY: all build clean
 
-test:
-	chmod +x ./run.sh
-	./run.sh
-
 build:
 	go build -v -o ./bin ${MAIN_PATH}/...
 
