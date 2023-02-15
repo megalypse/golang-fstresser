@@ -11,8 +11,6 @@ import (
 	"github.com/megalypse/golang-fstresser/internal/domain/entity"
 )
 
-// This mutex is created to be used inside this file only, please,
-// DO NOT USE IT ANYWHERE ELSE
 var wg sync.WaitGroup
 var requestQueue []*entity.Request
 

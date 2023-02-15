@@ -8,7 +8,6 @@ import (
 )
 
 func main() {
-	// runtime.GOMAXPROCS(6)
 	ctx := context.Background()
 	ctx, cancelCtx := context.WithCancel(ctx)
 
