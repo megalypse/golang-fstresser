@@ -27,8 +27,9 @@ func deployRpsComposer(ctx context.Context, cancelCtx context.CancelFunc, startT
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				// In case the desired peak RPS have not been met at the end of the rampup time
 				nowUnix := time.Now().Unix()
+				// In case the desired peak RPS have not been met at the end of the rampup time,
+				// we are setting the current RPS to the user defined peak.
 				if nowUnix > tickerDeadline {
 					if effectiveRps != cpc.PeakRps {
 						rpsChan <- cpc.PeakRps
