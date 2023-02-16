@@ -19,6 +19,7 @@ import (
 var wg sync.WaitGroup
 
 func main() {
+	// TODO: get max cpu usage from env variable
 	runtime.GOMAXPROCS(6)
 
 	ctx := context.Background()
@@ -42,6 +43,8 @@ func main() {
 	wg.Wait()
 }
 
+// runProfiles run the user selected profiles.
+// Each profile will run on its own go routine.
 func runProfiles(
 	ctx context.Context,
 	loader usecase.ProfileLoader,
@@ -64,6 +67,9 @@ func runProfiles(
 	}
 }
 
+/*
+getWrappers uses the given path and the loader to read all the profiles there located
+*/
 func getWrappers(loader usecase.ProfileLoader, path string) []*service.ProfilesWrapper {
 	profiles := findProfiles(path)
 
@@ -82,6 +88,7 @@ func getWrappers(loader usecase.ProfileLoader, path string) []*service.ProfilesW
 	return wrappers
 }
 
+// An aux function to extract the cli logic from the main workflow
 func chooseProfilesIndexes(wrappers []*service.ProfilesWrapper) []int {
 	fmt.Println("Choose the desired profiles to be run:")
 	for i, v := range wrappers {
@@ -107,6 +114,7 @@ func chooseProfilesIndexes(wrappers []*service.ProfilesWrapper) []int {
 	return finalList
 }
 
+// Find all the stress profile json files in the given path
 func findProfiles(path string) []string {
 	profilesPath := os.Getenv("FSTRESSER_PROFILES_PATH")
 	entries, err := os.ReadDir(profilesPath)

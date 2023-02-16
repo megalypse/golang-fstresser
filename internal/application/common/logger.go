@@ -12,12 +12,15 @@ import (
 	"time"
 )
 
+// lgrMap holds a logger instance reference for each profile
 var lgrMap map[string]*Logger
 
 func init() {
 	lgrMap = make(map[string]*Logger)
 }
 
+// GetLogger provides the logger for the profile that requested it.
+// If the context does not contain any profile name, then the default logger will be provided.
 func GetLogger(ctx context.Context) *Logger {
 
 	profileNameRaw := ctx.Value(GetCtxKey("profile-name"))
@@ -29,29 +32,38 @@ func GetLogger(ctx context.Context) *Logger {
 	return getLogger("default")
 }
 
+// getLogger searches for the logger by the provided key,
+// if no key is provided, a new logger is created, saved and returned.
 func getLogger(lgrName string) *Logger {
 	lgr, ok := lgrMap[lgrName]
 
 	if !ok {
-		lgr = getNewLogger(lgrName)
+		lgr = makeNewLogger(lgrName)
 		lgrMap[lgrName] = lgr
 	}
 
 	return lgr
 }
 
-func getNewLogger(lgrName string) *Logger {
+// makeNewLogger creates a new Logger instance with the provided lgrName
+func makeNewLogger(lgrName string) *Logger {
 	return &Logger{
 		buffer:  bytes.NewBuffer([]byte{}),
 		lgrName: lgrName,
 	}
 }
 
+// Logger to be used to provide visual feedback for the users.
 type Logger struct {
-	buffer  *bytes.Buffer
+	// buffer holds all the logged information so it can be registered later
+	buffer *bytes.Buffer
+
+	// lgrName the name provided to an instance of Logger
 	lgrName string
 }
 
+// Log logs the given message along with a timestamp and also saves
+// the final message inside `l.buffer` for later registration.
 func (l Logger) Log(message string) {
 	pst, err := time.LoadLocation("America/Los_Angeles")
 
@@ -70,6 +82,10 @@ func (l Logger) Log(message string) {
 	l.buffer.Write([]byte(finalMessage))
 }
 
+// SilentLog does not give feedback to the final user and only saves the final message
+// inside `l.logger`.
+//
+// This may be useful when saving error messages without the need to spam the console.
 func (l Logger) SilentLog(message string) {
 	pst, err := time.LoadLocation("America/Los_Angeles")
 
@@ -87,9 +103,14 @@ func (l Logger) SilentLog(message string) {
 	l.buffer.Write([]byte(finalMessage))
 }
 
+/*
+RegisterLogs uses `l.buffer` to save all the messages logged inside a .txt file
+*/
 func (l Logger) RegisterLogs() {
 	_, b, _, _ := runtime.Caller(0)
 	basepath := filepath.Dir(b)
+
+	// TODO: get logs path by env variable
 	logsDir := basepath + "/../../../logs"
 
 	profileName := strings.ReplaceAll(l.lgrName, " ", "_")

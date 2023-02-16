@@ -9,6 +9,12 @@ import (
 	"github.com/megalypse/golang-fstresser/internal/application/common"
 )
 
+/*
+deployHttpStatusAnalyzer should be executed on its own routine.
+
+Its goal is to analyze the ratio of succeeded/failed requests,
+and gracefully shutdown the software execution when the threshold is met.
+*/
 func deployHttpStatusAnalyzer(
 	ctx context.Context,
 	cancelCtx context.CancelFunc,
@@ -45,6 +51,10 @@ func deployHttpStatusAnalyzer(
 
 			totalRequests = successfullRequests + failedRequests
 			errMsg := fmt.Sprintf("(%s) Error threshold met", ctx.Value(common.GetCtxKey("profile-name")))
+
+			// The minimum amount of requests for the analysis to happen was set to 10
+			// to give at least a small window for it to recover and the software does not
+			// shutdown on the first fail.
 			if totalRequests >= 10 {
 				switch separated[1] {
 				case "raw":

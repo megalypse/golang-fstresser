@@ -21,7 +21,7 @@ func deployCustomProfileOrchestrator(
 	calculateCustomLoadsWindows(startTime, csp)
 	prepareRequests(csp)
 
-	requestQueueIter := generateRequestQueue(len(requestQueue) - 1)
+	requestQueueIter := makeRequestQueueCounter(len(requestQueue) - 1)
 
 	defaultRequesterChan := make(chan DefaultRequesterPayload)
 	customRequesterChan := make(chan CustomRequesterPayload)

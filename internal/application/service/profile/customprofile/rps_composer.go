@@ -7,7 +7,7 @@ import (
 	"github.com/megalypse/golang-fstresser/internal/application/common"
 )
 
-// This one purpose is to keep track of whenever a rampup should be made
+// deployRpsComposer purpose is to keep track of whenever a rampup should be made
 func deployRpsComposer(ctx context.Context, cancelCtx context.CancelFunc, startTime time.Time, cpc *CustomProfileConfig) chan int {
 	rpsChan := make(chan int)
 	ticker := time.NewTicker(cpc.RpsIncreaseInterval.Duration)

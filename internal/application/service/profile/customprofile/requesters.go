@@ -6,6 +6,11 @@ import (
 	"github.com/megalypse/golang-fstresser/internal/application/common"
 )
 
+/*
+deployDefaultRequester should be executed on its own routine.
+
+It is responsible for triggering the requests during normal requests time windows
+*/
 func deployDefaultRequester(
 	ctx context.Context,
 	cancelCtx context.CancelFunc,
@@ -40,6 +45,11 @@ func deployDefaultRequester(
 	}
 }
 
+/*
+deployCustomRequester should be executed on its own routine.
+
+It is responsible for triggering the requests during custom requests time windows
+*/
 func deployCustomRequester(
 	ctx context.Context,
 	cancelCtx context.CancelFunc,
