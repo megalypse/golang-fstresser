@@ -165,9 +165,6 @@ type CustomLoad struct {
 	// The RPS this custom load will generate
 	Rps int
 
-	// TODO: remove this unused field
-	IsLogged bool
-
 	// This field will hold a runtime computed value that represents `StartsAt` converted to Unix
 	unixStartsAt int64
 
