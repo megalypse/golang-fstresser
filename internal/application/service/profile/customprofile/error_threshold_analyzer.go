@@ -52,10 +52,11 @@ func deployHttpStatusAnalyzer(
 			totalRequests = successfullRequests + failedRequests
 			errMsg := fmt.Sprintf("(%s) Error threshold met", ctx.Value(common.GetCtxKey("profile-name")))
 
-			// The minimum amount of requests for the analysis to happen was set to 10
+			// The minimum amount of requests for the analysis to happen was set to 50
 			// to give at least a small window for it to recover and the software does not
 			// shutdown on the first fail.
-			if totalRequests >= 10 {
+			MINIMUM_REQ_AMOUNT := 50
+			if totalRequests >= MINIMUM_REQ_AMOUNT {
 				switch separated[1] {
 				case "raw":
 					if failedRequests > threshold {
