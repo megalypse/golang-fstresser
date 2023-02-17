@@ -19,8 +19,7 @@ import (
 var wg sync.WaitGroup
 
 func main() {
-	// TODO: get max cpu usage from env variable
-	runtime.GOMAXPROCS(6)
+	setMaxProcs()
 
 	ctx := context.Background()
 	ctx, cancelCtx := context.WithCancel(ctx)
@@ -28,11 +27,7 @@ func main() {
 	defer cancelCtx()
 	defer common.HandlePanic(ctx, cancelCtx)
 
-	path := os.Getenv("FSTRESSER_PROFILES_PATH")
-
-	if path == "" {
-		log.Fatal("Profiles path not defined")
-	}
+	path := common.GetResourcesPath()
 
 	loader := factory.MakeLocalProfileLoader()
 	wrappers := getWrappers(loader, path)
@@ -116,7 +111,7 @@ func chooseProfilesIndexes(wrappers []*service.ProfilesWrapper) []int {
 
 // Find all the stress profile json files in the given path
 func findProfiles(path string) []string {
-	profilesPath := os.Getenv("FSTRESSER_PROFILES_PATH")
+	profilesPath := common.GetResourcesPath()
 	entries, err := os.ReadDir(profilesPath)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -128,4 +123,17 @@ func findProfiles(path string) []string {
 	}
 
 	return profiles
+}
+
+func setMaxProcs() {
+	maxProcsRaw := common.GetMaxProcs()
+
+	if maxProcsRaw != "" {
+		maxProcs, err := strconv.Atoi(maxProcsRaw)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		runtime.GOMAXPROCS(maxProcs)
+	}
 }

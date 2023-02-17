@@ -22,9 +22,6 @@ type LocalProfileLoader struct {
 }
 
 func (lpl LocalProfileLoader) LoadProfile(ctx context.Context, cancelCtx context.CancelFunc) []usecase.StressProfile {
-	if lpl.ProfilesPath == "" {
-		common.LogFinale(ctx, cancelCtx, "Profiles path not provided. Ending execution...")
-	}
 
 	result, err := os.ReadFile(lpl.ProfilesPath)
 

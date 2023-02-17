@@ -1,9 +1,7 @@
 package factory
 
 import (
-	"log"
-	"os"
-
+	"github.com/megalypse/golang-fstresser/internal/application/common"
 	"github.com/megalypse/golang-fstresser/internal/application/service"
 	"github.com/megalypse/golang-fstresser/internal/domain/usecase"
 )
@@ -15,10 +13,7 @@ func init() {
 }
 
 func MakeLocalProfileLoader() usecase.ProfileLoader {
-	path := os.Getenv("FSTRESSER_PROFILES_PATH")
-	if path == "" {
-		log.Fatal("Profiles path not defined")
-	}
+	path := common.GetResourcesPath()
 
 	return service.LocalProfileLoader{
 		MakeRequestUsecase: makeRequestUsecase,

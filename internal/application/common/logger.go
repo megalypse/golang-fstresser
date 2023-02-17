@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 )
@@ -107,11 +105,7 @@ func (l Logger) SilentLog(message string) {
 RegisterLogs uses `l.buffer` to save all the messages logged inside a .txt file
 */
 func (l Logger) RegisterLogs() {
-	_, b, _, _ := runtime.Caller(0)
-	basepath := filepath.Dir(b)
-
-	// TODO: get logs path by env variable
-	logsDir := basepath + "/../../../logs"
+	logsDir := GetLogsPath()
 
 	profileName := strings.ReplaceAll(l.lgrName, " ", "_")
 	fileName := fmt.Sprintf(logsDir+"/%s_%d.txt", profileName, time.Now().UnixMilli())
