@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	common.SetMaxProcs()
 	ctx := context.Background()
 	ctx, cancelCtx := context.WithCancel(ctx)
 

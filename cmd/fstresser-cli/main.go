@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -19,7 +18,7 @@ import (
 var wg sync.WaitGroup
 
 func main() {
-	setMaxProcs()
+	common.SetMaxProcs()
 
 	ctx := context.Background()
 	ctx, cancelCtx := context.WithCancel(ctx)
@@ -123,17 +122,4 @@ func findProfiles(path string) []string {
 	}
 
 	return profiles
-}
-
-func setMaxProcs() {
-	maxProcsRaw := common.GetMaxProcs()
-
-	if maxProcsRaw != "" {
-		maxProcs, err := strconv.Atoi(maxProcsRaw)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-		runtime.GOMAXPROCS(maxProcs)
-	}
 }
